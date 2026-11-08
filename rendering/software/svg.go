@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/geometry"
 	"image"
 	"math"
@@ -11,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 )
 
@@ -729,7 +729,7 @@ func (context svgContext) transformFor(node *svgNode, width, height float64) geo
 func parseSVGTransform(value string, width, height float64) geometry.Affine {
 	matrix := geometry.IdentityAffine()
 	values := parser.ParseComponentValueList(value)
-	box := &layouts.Box{Width: width, Height: height}
+	box := &model.Box{Width: width, Height: height}
 	for _, item := range values {
 		if parser.IsWhitespace(item) {
 			continue

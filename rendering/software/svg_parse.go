@@ -1,9 +1,9 @@
 package software
 
 import (
+	"gonetsurf/layouting/model"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/rendering/geometry"
 	css "gonetsurf/rendering/utils/css"
@@ -27,7 +27,7 @@ func transformAngle(values []parser.ComponentValue, index int) (float64, bool) {
 
 func ParseColor(input string) (Color, bool) { return css.ParseColor(input) }
 
-func transformFunction(function *parser.Function, box *layouts.Box) (geometry.Affine, bool) {
+func transformFunction(function *parser.Function, box *model.Box) (geometry.Affine, bool) {
 	name := strings.ToLower(function.Name)
 	values := nonWhitespaceValues(function.Value)
 	switch name {

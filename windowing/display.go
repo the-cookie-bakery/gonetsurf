@@ -26,6 +26,12 @@ type Window interface {
 	Scale() float64
 }
 
+// NativeWindow exposes a platform-native window handle for GPU presentation.
+type NativeWindow interface {
+	NativeWindowID() uintptr
+	DisplayName() string
+}
+
 // SurfacePresenter is implemented by windows that can atomically composite a
 // source surface into their backing store and present it. This avoids races
 // between a resize replacing the backing surface and the shell blitting into

@@ -1,17 +1,17 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"math"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 )
 
 // parseBoxTransformMatrix returns the full 3D transform for a box, including
 // the individual translate/rotate/scale properties, transform, perspective,
 // and transform-origin.
-func parseBoxTransformMatrix(box *layouts.Box) (matrix4, bool) {
+func parseBoxTransformMatrix(box *model.Box) (matrix4, bool) {
 	if box == nil || box.Style == nil {
 		return identityMatrix4(), false
 	}
@@ -75,7 +75,7 @@ func parseBoxTransformMatrix(box *layouts.Box) (matrix4, bool) {
 		multiply(translationMatrix4(-originX, -originY, -originZ)), true
 }
 
-func transformFunctionMatrix4(function *parser.Function, box *layouts.Box) (matrix4, bool) {
+func transformFunctionMatrix4(function *parser.Function, box *model.Box) (matrix4, bool) {
 	name := strings.ToLower(function.Name)
 	values := nonWhitespaceValues(function.Value)
 	switch name {
@@ -221,7 +221,7 @@ func transformFunctionMatrix4(function *parser.Function, box *layouts.Box) (matr
 	}
 }
 
-func parseTranslateProperty(text string, box *layouts.Box) (matrix4, bool) {
+func parseTranslateProperty(text string, box *model.Box) (matrix4, bool) {
 	values := nonWhitespaceValues(parser.ParseComponentValueList(text))
 	if len(values) == 0 || len(values) > 3 {
 		return identityMatrix4(), false
@@ -235,7 +235,7 @@ func parseTranslateProperty(text string, box *layouts.Box) (matrix4, bool) {
 	return translationMatrix4(xPos, yPos, zPos), true
 }
 
-func parseRotateProperty(text string, box *layouts.Box) (matrix4, bool) {
+func parseRotateProperty(text string, box *model.Box) (matrix4, bool) {
 	values := nonWhitespaceValues(parser.ParseComponentValueList(text))
 	if len(values) == 0 {
 		return identityMatrix4(), false
@@ -270,7 +270,7 @@ func parseRotateProperty(text string, box *layouts.Box) (matrix4, bool) {
 	return identityMatrix4(), false
 }
 
-func parseScaleProperty(text string, box *layouts.Box) (matrix4, bool) {
+func parseScaleProperty(text string, box *model.Box) (matrix4, bool) {
 	values := nonWhitespaceValues(parser.ParseComponentValueList(text))
 	if len(values) == 0 || len(values) > 3 {
 		return identityMatrix4(), false
@@ -305,7 +305,7 @@ func affineToMatrix4(matrix affine) matrix4 {
 	}
 }
 
-func transformOrigin3D(box *layouts.Box) (float64, float64, float64) {
+func transformOrigin3D(box *model.Box) (float64, float64, float64) {
 	originX := box.X + box.Width/2
 	originY := box.Y + box.Height/2
 	originZ := 0.0
@@ -327,7 +327,7 @@ func transformOrigin3D(box *layouts.Box) (float64, float64, float64) {
 	return originX, originY, originZ
 }
 
-func perspectiveOrigin(box *layouts.Box) (float64, float64) {
+func perspectiveOrigin(box *model.Box) (float64, float64) {
 	originX := box.X + box.Width/2
 	originY := box.Y + box.Height/2
 	if box.Style == nil {
@@ -360,7 +360,7 @@ func rotationAxisMatrix4(xAxis, yAxis, zAxis, radians float64) matrix4 {
 	}
 }
 
-func hasBoxTransform(box *layouts.Box) bool {
+func hasBoxTransform(box *model.Box) bool {
 	_, ok := parseBoxTransformMatrix(box)
 	return ok
 }

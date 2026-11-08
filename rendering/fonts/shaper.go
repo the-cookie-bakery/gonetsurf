@@ -1,14 +1,13 @@
 package fonts
 
 import (
+	"gonetsurf/layouting/model"
 	"strings"
 
 	"golang.org/x/image/font"
-
-	"gonetsurf/layouts"
 )
 
-// Shaper implements layouts.TextShaper with real font advances and kerning.
+// Shaper implements model.TextShaper with real font advances and kerning.
 type Shaper struct {
 	Library *Library
 }
@@ -21,8 +20,8 @@ func NewShaper(library *Library) *Shaper {
 	return &Shaper{Library: library}
 }
 
-// Shape implements layouts.TextShaper.
-func (shaper *Shaper) Shape(run layouts.TextRun) []layouts.Glyph {
+// Shape implements model.TextShaper.
+func (shaper *Shaper) Shape(run model.TextRun) []model.Glyph {
 	library := shaper.Library
 	if library == nil {
 		library = Default()
@@ -38,7 +37,7 @@ func (shaper *Shaper) Shape(run layouts.TextRun) []layouts.Glyph {
 		spec.Size = 16
 	}
 	characters := []rune(run.Text)
-	glyphs := make([]layouts.Glyph, 0, len(characters))
+	glyphs := make([]model.Glyph, 0, len(characters))
 	faces := library.Faces(spec)
 	var previousFace font.Face
 	var previousCharacter rune = -1
@@ -58,7 +57,7 @@ func (shaper *Shaper) Shape(run layouts.TextRun) []layouts.Glyph {
 		if character == ' ' {
 			advance += run.WordSpacing
 		}
-		glyphs = append(glyphs, layouts.Glyph{Text: string(character), Advance: advance})
+		glyphs = append(glyphs, model.Glyph{Text: string(character), Advance: advance})
 		previousFace = face
 		previousCharacter = character
 	}

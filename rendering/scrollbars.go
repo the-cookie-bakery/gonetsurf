@@ -1,17 +1,16 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"math"
-
-	"gonetsurf/layouts"
 )
 
-func (painter *Painter) paintScrollbars(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func (painter *Painter) paintScrollbars(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if box == nil || (!box.HasVerticalScrollbar && !box.HasHorizontalScrollbar) {
 		return
 	}
-	const thickness = layouts.ScrollbarThickness
+	const thickness = model.ScrollbarThickness
 	trackColor := NewColor(238, 238, 240)
 	thumbColor := NewColor(148, 148, 154)
 	contentX := xPos + (box.ContentX - box.X)

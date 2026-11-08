@@ -1,15 +1,14 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"sort"
 	"strings"
-
-	"gonetsurf/layouts"
 )
 
 type stackingEntry struct {
-	box     *layouts.Box
+	box     *model.Box
 	zIndex  int
 	order   int
 	offsetX float64
@@ -19,11 +18,11 @@ type stackingEntry struct {
 	pseudo  bool
 }
 
-func (painter *Painter) paintStackingContext(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+func (painter *Painter) paintStackingContext(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	painter.paintStackingContextWithEffects(box, surface, offsetX, offsetY, true)
 }
 
-func (painter *Painter) paintStackingContextWithEffects(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64, applyEffects bool) {
+func (painter *Painter) paintStackingContextWithEffects(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64, applyEffects bool) {
 	if box == nil {
 		return
 	}
@@ -37,7 +36,7 @@ func (painter *Painter) paintStackingContextWithEffects(box *layouts.Box, surfac
 			return
 		}
 	}
-	if box.Kind == layouts.TextBox {
+	if box.Kind == model.TextBox {
 		painter.paintText(box, surface, offsetX, offsetY)
 		return
 	}
@@ -59,7 +58,7 @@ func (painter *Painter) paintStackingContextWithEffects(box *layouts.Box, surfac
 	painter.paintScrollbars(box, surface, xPos, yPos)
 }
 
-func (painter *Painter) paintBoxContents(box *layouts.Box, surface interfaces.Canvas, contentOffsetX, contentOffsetY float64, clipContent bool) {
+func (painter *Painter) paintBoxContents(box *model.Box, surface interfaces.Canvas, contentOffsetX, contentOffsetY float64, clipContent bool) {
 	clip := surface.Clip()
 	hasClip := true
 	if box.ClipX || box.ClipY {
@@ -109,7 +108,7 @@ func (painter *Painter) paintStackingEntry(surface interfaces.Canvas, entry stac
 // roundedPaddingClipMask clips overflow to the padding-edge curve. CSS
 // Backgrounds and Borders 3 §4.3 requires non-visible overflow to follow the
 // curved padding edge.
-func roundedPaddingClipMask(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) *Mask {
+func roundedPaddingClipMask(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) *Mask {
 	if box == nil || box.Style == nil || surface == nil || !box.ClipX || !box.ClipY {
 		return nil
 	}
@@ -131,7 +130,7 @@ func roundedPaddingClipMask(box *layouts.Box, surface interfaces.Canvas, offsetX
 	return RasterizeFill(path, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 }
 
-func (painter *Painter) paintPseudoContext(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+func (painter *Painter) paintPseudoContext(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	if box == nil {
 		return
 	}
@@ -141,7 +140,7 @@ func (painter *Painter) paintPseudoContext(box *layouts.Box, surface interfaces.
 	painter.paintScrollbars(box, surface, xPos, yPos)
 }
 
-func (painter *Painter) paintContent(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+func (painter *Painter) paintContent(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	if mask := roundedPaddingClipMask(box, surface, offsetX, offsetY); mask != nil {
 		layer := surface.NewLayer()
 		layer.SetClip(surface.Clip())
@@ -152,7 +151,7 @@ func (painter *Painter) paintContent(box *layouts.Box, surface interfaces.Canvas
 	painter.paintContentRaw(box, surface, offsetX, offsetY)
 }
 
-func (painter *Painter) paintContentRaw(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+func (painter *Painter) paintContentRaw(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	if box != nil && box.Node != nil && painter.framePainted[box.Node] {
 		return
 	}
@@ -168,7 +167,7 @@ func (painter *Painter) paintContentRaw(box *layouts.Box, surface interfaces.Can
 		if child == nil {
 			continue
 		}
-		if child.Kind == layouts.TextBox {
+		if child.Kind == model.TextBox {
 			painter.paintText(child, surface, childOffsetX, childOffsetY)
 			continue
 		}
@@ -185,7 +184,7 @@ func (painter *Painter) paintContentRaw(box *layouts.Box, surface interfaces.Can
 	}
 }
 
-func paintOrigin(box *layouts.Box, offsetX, offsetY float64) (float64, float64, float64, float64) {
+func paintOrigin(box *model.Box, offsetX, offsetY float64) (float64, float64, float64, float64) {
 	xPos := box.X + offsetX
 	yPos := box.Y + offsetY
 	if box.Style == nil || !strings.EqualFold(strings.TrimSpace(box.Style.GetString("position")), "sticky") {
@@ -202,7 +201,7 @@ func paintOrigin(box *layouts.Box, offsetX, offsetY float64) (float64, float64, 
 		stickyY - box.Y
 }
 
-func (painter *Painter) paintDecorations(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func (painter *Painter) paintDecorations(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if box.Style != nil {
 		painter.paintOuterShadows(box, surface, xPos, yPos)
 	}
@@ -214,9 +213,9 @@ func (painter *Painter) paintDecorations(box *layouts.Box, surface interfaces.Ca
 	painter.paintReplacedContent(box, surface, xPos-box.X, yPos-box.Y)
 }
 
-func collectStackingEntries(box *layouts.Box, offsetX, offsetY float64, clip Rect, hasClip bool, entries *[]stackingEntry, counter *int) {
+func collectStackingEntries(box *model.Box, offsetX, offsetY float64, clip Rect, hasClip bool, entries *[]stackingEntry, counter *int) {
 	for _, child := range box.Children {
-		if child == nil || child.Kind == layouts.TextBox {
+		if child == nil || child.Kind == model.TextBox {
 			continue
 		}
 		if isStackingContext(child) {
@@ -280,7 +279,7 @@ func collectStackingEntries(box *layouts.Box, offsetX, offsetY float64, clip Rec
 	}
 }
 
-func boxClipRect(box *layouts.Box, offsetX, offsetY float64, surfaceWidth, surfaceHeight int) Rect {
+func boxClipRect(box *model.Box, offsetX, offsetY float64, surfaceWidth, surfaceHeight int) Rect {
 	xPos := box.X + offsetX
 	yPos := box.Y + offsetY
 	rect := Rect{X: xPos, Y: yPos, Width: box.Width, Height: box.Height}
@@ -295,7 +294,7 @@ func boxClipRect(box *layouts.Box, offsetX, offsetY float64, surfaceWidth, surfa
 	return rect
 }
 
-func isPositioned(box *layouts.Box) bool {
+func isPositioned(box *model.Box) bool {
 	if box == nil || box.Style == nil {
 		return false
 	}
@@ -303,7 +302,7 @@ func isPositioned(box *layouts.Box) bool {
 	return position != "" && position != "static"
 }
 
-func isStackingContext(box *layouts.Box) bool {
+func isStackingContext(box *model.Box) bool {
 	if box == nil || box.Style == nil {
 		return false
 	}
@@ -326,7 +325,7 @@ func isStackingContext(box *layouts.Box) bool {
 	return false
 }
 
-func effectiveZIndex(box *layouts.Box) int {
+func effectiveZIndex(box *model.Box) int {
 	if box == nil || box.Style == nil {
 		return 0
 	}
@@ -341,7 +340,7 @@ func zIndexAuto(value string) bool {
 	return trimmed == "" || trimmed == "auto"
 }
 
-func boxOpacity(box *layouts.Box) (float64, bool) {
+func boxOpacity(box *model.Box) (float64, bool) {
 	if box == nil || box.Style == nil {
 		return 1, false
 	}

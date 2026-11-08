@@ -1,12 +1,12 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/parsers/css/tokenizer"
 	"gonetsurf/styles"
@@ -30,14 +30,14 @@ type borderImageWidths struct {
 	left   float64
 }
 
-func (painter *Painter) paintBorders(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func (painter *Painter) paintBorders(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if painter.paintBorderImage(box, surface, xPos, yPos) {
 		return
 	}
 	paintBorders(box, surface, xPos, yPos)
 }
 
-func (painter *Painter) paintBorderImage(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) bool {
+func (painter *Painter) paintBorderImage(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) bool {
 	spec := parseBorderImageStyle(box.Style)
 	if spec == nil || spec.source == "" {
 		return false

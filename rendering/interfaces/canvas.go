@@ -6,6 +6,11 @@ import (
 	"gonetsurf/rendering/geometry"
 )
 
+// NodeCanvas labels the next drawing command with a backend node index.
+type NodeCanvas interface {
+	SetNodeIndex(index int)
+}
+
 // Canvas is the drawing interface implemented by every rendering pipeline.
 // The painter emits drawing operations to a Canvas; the software pipeline
 // rasterizes them directly and the scene recorder captures them for another

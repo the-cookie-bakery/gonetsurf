@@ -1,9 +1,8 @@
 package fonts
 
 import (
+	"gonetsurf/layouting/model"
 	"testing"
-
-	"gonetsurf/layouts"
 )
 
 func TestEmbeddedFonts(t *testing.T) {
@@ -66,7 +65,7 @@ func TestMetricsForSpec(t *testing.T) {
 func TestShaperAdvancesAndKerning(t *testing.T) {
 	library := NewLibrary()
 	shaper := NewShaper(library)
-	glyphs := shaper.Shape(layouts.TextRun{Text: "AV", FontFamily: "Go", FontWeight: "bold", FontSize: 20})
+	glyphs := shaper.Shape(model.TextRun{Text: "AV", FontFamily: "Go", FontWeight: "bold", FontSize: 20})
 	if len(glyphs) != 2 {
 		t.Fatalf("glyphs = %d", len(glyphs))
 	}

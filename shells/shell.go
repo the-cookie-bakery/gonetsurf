@@ -18,6 +18,7 @@ import (
 	"gonetsurf/brokers/storage"
 	"gonetsurf/browsers"
 	"gonetsurf/dom"
+	layoutinterfaces "gonetsurf/layouting/interfaces"
 	"gonetsurf/parsers/css/cssom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
@@ -71,10 +72,12 @@ type Shell struct {
 	pointerX    int
 	pointerY    int
 
-	page        *pageState
-	Renderer    interfaces.Renderer
-	dirty       bool
-	dirtySignal chan struct{}
+	page           *pageState
+	Renderer       interfaces.Renderer
+	LayoutBackend  layoutinterfaces.Backend
+	dirty          bool
+	swapchainReady bool
+	dirtySignal    chan struct{}
 
 	topBarCache    chromeCache
 	statusBarCache chromeCache
@@ -82,10 +85,12 @@ type Shell struct {
 }
 
 type chromeCache struct {
-	source  string
-	width   int
-	height  int
-	surface interfaces.Surface
+	source        string
+	width         int
+	height        int
+	surface       interfaces.Surface
+	renderer      interfaces.Renderer
+	layoutBackend layoutinterfaces.Backend
 }
 
 func (cache *chromeCache) render(source string, width, height int) (interfaces.Surface, error) {
@@ -95,7 +100,7 @@ func (cache *chromeCache) render(source string, width, height int) (interfaces.S
 	cache.source = source
 	cache.width = width
 	cache.height = height
-	surface, err := renderChrome(source, width, height)
+	surface, err := renderChrome(source, width, height, cache.renderer, cache.layoutBackend)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +158,11 @@ func (shell *Shell) SetRenderer(renderer interfaces.Renderer) {
 	shell.Renderer = renderer
 }
 
+// SetLayoutBackend installs the layout backend used for pages and chrome.
+func (shell *Shell) SetLayoutBackend(backend layoutinterfaces.Backend) {
+	shell.LayoutBackend = backend
+}
+
 // Resize updates the viewport.
 func (shell *Shell) Resize(width, height int) {
 	if width <= 0 || height <= 0 {
@@ -168,6 +178,12 @@ func (shell *Shell) Render() (interfaces.Surface, error) {
 	prepareStart := time.Now()
 	result := software.NewSurface(shell.Width, shell.Height)
 	result.Clear(rendering.NewColor(255, 255, 255))
+	shell.topBarCache.renderer = shell.Renderer
+	shell.topBarCache.layoutBackend = shell.LayoutBackend
+	shell.statusBarCache.renderer = shell.Renderer
+	shell.statusBarCache.layoutBackend = shell.LayoutBackend
+	shell.privacyCache.renderer = shell.Renderer
+	shell.privacyCache.layoutBackend = shell.LayoutBackend
 	debugf("frame: prepare %s", time.Since(prepareStart))
 	contentHeight := shell.contentHeight()
 	if shell.page != nil && contentHeight > 0 {
@@ -320,7 +336,7 @@ html, body { margin:0; padding:0; font-family:sans-serif; font-size:11px; color:
 </body></html>`
 }
 
-func renderChrome(source string, width, height int) (interfaces.Surface, error) {
+func renderChrome(source string, width, height int, renderer interfaces.Renderer, layoutBackend layoutinterfaces.Backend) (interfaces.Surface, error) {
 	if width <= 0 || height <= 0 {
 		return software.NewSurface(width, height), nil
 	}
@@ -329,7 +345,10 @@ func renderChrome(source string, width, height int) (interfaces.Surface, error) 
 		return software.NewSurface(width, height), nil
 	}
 	engine := styleEngine(document)
-	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{})
+	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{
+		Renderer:      renderer,
+		LayoutBackend: layoutBackend,
+	})
 }
 
 func styleEngine(document *dom.Document) *styles.Engine {
@@ -415,6 +434,22 @@ func (shell *Shell) present(window windowing.Window) {
 		return
 	}
 	damage := image.Rect(0, 0, shell.Width, shell.Height)
+	if presenter, ok := shell.Renderer.(interfaces.SwapchainPresenter); ok {
+		if native, ok := window.(windowing.NativeWindow); ok {
+			if !shell.swapchainReady {
+				if attachErr := presenter.AttachPresenter(native.DisplayName(), native.NativeWindowID(), shell.Width, shell.Height); attachErr == nil {
+					shell.swapchainReady = true
+				}
+			}
+			if shell.swapchainReady {
+				if presentErr := presenter.PresentSurface(surface, damage); presentErr != nil {
+					shell.Error = presentErr.Error()
+				}
+				shell.dirty = false
+				return
+			}
+		}
+	}
 	if presenter, ok := window.(windowing.SurfacePresenter); ok {
 		if err := presenter.PresentSurface(surface, damage); err != nil {
 			shell.Error = err.Error()
@@ -1365,8 +1400,9 @@ func (shell *Shell) resourceOptions(base, topLevel *urls.URL) (rendering.Options
 	}
 	fontCache := fonts.NewLoaderCache()
 	return rendering.Options{
-		Renderer:   shell.Renderer,
-		AsyncFonts: true,
+		Renderer:      shell.Renderer,
+		LayoutBackend: shell.LayoutBackend,
+		AsyncFonts:    true,
 		Images: rendering.CachedImageProvider{
 			Provider: provider,
 			Cache:    rendering.NewImageCache(),

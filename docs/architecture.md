@@ -4,7 +4,7 @@
 > implemented today, what is partial, and where to start, see
 > [`handover.md`](./handover.md). As of 2026-10-28 the implemented packages include the
 > URL, encoding, HTML-parsing/`dom`, HTTP/TLS/DNS, cache, cookie, Phase 4 CSS
-> parser/CSSOM layers, the Phase 5 `styles` engine, the Phase 6 `layouts` engine,
+> parser/CSSOM layers, the Phase 5 `styles` engine, the Phase 6 `layouting` engine,
 > the Phase 7 `rendering` pipeline (paint, fonts, images, color, compositor), the
 > Phase 8 `windowing`, `browsers`, and `shells` packages with the X11 backend,
 > the Phase 9 `ipc`, `runtime`, `runtime/sandbox`, and `brokers` packages, and the
@@ -37,7 +37,7 @@ and privacy hooks are designed now.
                                          │ ipc/  (Unix socket + shm surfaces)
                          ┌───────────────▼───────────────────────────────┐
                          │ engines/browsing   one process per site        │
-                         │   dom → styles → layouts → rendering           │
+                         │   dom → styles → layouting → rendering           │
                          │   javascripts (sobek) + webapis (farbled)      │
                          │   sandboxed: no sockets, no ambient filesystem │
                          └───────────────┬───────────────────────────────┘
@@ -84,7 +84,7 @@ state.
 | `dom` | Our DOM tree (`Node`, `Element`, `Document`, shadow DOM, template contents). |
 | `parsers/css` | Tokenizer, parser, grammar engine, selectors, values, CSSOM, cascade, media, animations. |
 | `styles` | Style resolution, inheritance, computed values, UA stylesheet, presentational hints. |
-| `layouts` | Box tree and formatting contexts; geometry and text layout. |
+| `layouting` | Backend-neutral box tree, formatting contexts, software/Vulkan layout backends. |
 | `rendering` | Paint frontend, page orchestration, image providers, and renderer selection. |
 | `rendering/geometry` | Backend-neutral value types, path/coverage math, transforms. |
 | `rendering/interfaces` | Surface, Canvas, Renderer, Backend, Presenter, and scene contracts. |
@@ -116,7 +116,7 @@ state.
 4. Renderer decodes bytes (`parsers/html` encoding sniffing), parses with `x/net/html`,
    and builds the `dom` tree.
 5. `parsers/css` parses styles; `styles` cascades and computes values.
-6. `layouts` builds the box tree and lays out; `rendering` paints into a surface.
+6. `layouting` builds the box tree and lays out; `rendering` paints into a surface.
 7. The surface is transferred to the shell over shared memory and composited to the window.
 8. JavaScript (later phase) runs through `engines/javascripts` with `webapis` bindings that
    consult `farbling`.
@@ -232,7 +232,7 @@ cannot correlate visits across different first-party sites.
 - **D-ARCH-003:** The WHATWG URL parser in `urls` is the only parser used for security
   decisions; `net/url` is forbidden on security and cache-key paths.
 - **D-ARCH-004:** DOM package is `dom` (singular). Plural convention applies to category
-  packages (`parsers`, `protocols`, `caches`, `storages`, `layouts`, `windowing`).
+  packages (`parsers`, `protocols`, `caches`, `storages`, `layouting`, `windowing`).
 - **D-ARCH-005:** Module path is `gonetsurf` with no host prefix.
 - **D-ARCH-006:** Package skeletons are created when their phase begins, not as a single
   up-front tree of empty stubs. Every package carries a package doc comment; `cmd/*`

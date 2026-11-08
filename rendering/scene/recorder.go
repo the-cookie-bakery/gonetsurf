@@ -11,10 +11,11 @@ import (
 
 // Recorder implements interfaces.Canvas by appending commands.
 type Recorder struct {
-	width    int
-	height   int
-	clip     geometry.Rect
-	commands []interfaces.Command
+	width       int
+	height      int
+	clip        geometry.Rect
+	commands    []interfaces.Command
+	pendingNode int
 }
 
 // New returns a recorder for a frame of the given size.
@@ -26,10 +27,25 @@ func New(width, height int) *Recorder {
 		height = 0
 	}
 	return &Recorder{
-		width:  width,
-		height: height,
-		clip:   geometry.Rect{Width: float64(width), Height: float64(height)},
+		width:       width,
+		height:      height,
+		clip:        geometry.Rect{Width: float64(width), Height: float64(height)},
+		pendingNode: -1,
 	}
+}
+
+func (recorder *Recorder) tag(command interfaces.Command) interfaces.Command {
+	if recorder.pendingNode >= 0 {
+		command.UseNode = true
+		command.NodeIndex = recorder.pendingNode
+		recorder.pendingNode = -1
+	}
+	return command
+}
+
+// SetNodeIndex labels the next command with a backend node index.
+func (recorder *Recorder) SetNodeIndex(index int) {
+	recorder.pendingNode = index
 }
 
 // Width returns the frame width.
@@ -60,12 +76,12 @@ func (recorder *Recorder) Clear(color geometry.Color) {
 
 // FillRect appends a rectangle fill.
 func (recorder *Recorder) FillRect(rect geometry.Rect, color geometry.Color) {
-	recorder.commands = append(recorder.commands, interfaces.Command{Kind: interfaces.CommandFillRect, Rect: rect, Color: color})
+	recorder.commands = append(recorder.commands, recorder.tag(interfaces.Command{Kind: interfaces.CommandFillRect, Rect: rect, Color: color}))
 }
 
 // FillPath appends a path fill.
 func (recorder *Recorder) FillPath(path *geometry.Path, rule geometry.FillRule, color geometry.Color) {
-	recorder.commands = append(recorder.commands, interfaces.Command{Kind: interfaces.CommandFillPath, Path: path, FillRule: rule, Color: color})
+	recorder.commands = append(recorder.commands, recorder.tag(interfaces.Command{Kind: interfaces.CommandFillPath, Path: path, FillRule: rule, Color: color}))
 }
 
 // StrokePath appends a path stroke.

@@ -19,8 +19,9 @@ type imageCacheEntry struct {
 // ImageCache is a concurrency-safe cache of decoded images. It is shared
 // across frames so repeated paints do not refetch or re-decode subresources.
 type ImageCache struct {
-	mutex   sync.Mutex
-	entries map[string]*imageCacheEntry
+	mutex    sync.Mutex
+	entries  map[string]*imageCacheEntry
+	callback func(string)
 }
 
 // NewImageCache returns an empty image cache.
@@ -48,6 +49,12 @@ func (cache *ImageCache) load(key string, loader func() (image.Image, error)) (*
 	}
 	entry.err = err
 	close(entry.done)
+	cache.mutex.Lock()
+	callback := cache.callback
+	cache.mutex.Unlock()
+	if callback != nil {
+		callback(key)
+	}
 	if err != nil {
 		cache.mutex.Lock()
 		delete(cache.entries, key)
@@ -82,6 +89,60 @@ func (provider CachedImageProvider) LoadImage(resource string) (image.Image, err
 		return nil, err
 	}
 	return loaded, nil
+}
+
+// SetLoadCallback installs a function invoked after an image load finishes.
+// The callback runs on the loading goroutine and must not mutate layout state
+// directly.
+func (cache *ImageCache) SetLoadCallback(callback func(string)) {
+	if cache == nil {
+		return
+	}
+	cache.mutex.Lock()
+	cache.callback = callback
+	cache.mutex.Unlock()
+}
+
+func (cache *ImageCache) peek(key string) (*image.NRGBA, bool) {
+	cache.mutex.Lock()
+	entry, ok := cache.entries[key]
+	cache.mutex.Unlock()
+	if !ok {
+		return nil, false
+	}
+	select {
+	case <-entry.done:
+		if entry.err != nil || entry.image == nil {
+			return nil, false
+		}
+		return entry.image, true
+	default:
+		return nil, false
+	}
+}
+
+// PeekImage returns a decoded image without blocking. The second result is
+// false while the image is still loading or after a failed load.
+func (provider CachedImageProvider) PeekImage(resource string) (image.Image, bool) {
+	if provider.Provider == nil {
+		return nil, false
+	}
+	cache := provider.Cache
+	if cache == nil {
+		return nil, false
+	}
+	imageValue, ok := cache.peek(provider.cacheKey(resource))
+	if !ok {
+		return nil, false
+	}
+	return imageValue, true
+}
+
+// SetLoadCallback installs an image load callback on the shared cache.
+func (provider CachedImageProvider) SetLoadCallback(callback func(string)) {
+	if provider.Cache != nil {
+		provider.Cache.SetLoadCallback(callback)
+	}
 }
 
 // Prefetch loads resources concurrently into the cache. It is safe to call

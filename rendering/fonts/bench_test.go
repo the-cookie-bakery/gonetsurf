@@ -1,15 +1,14 @@
 package fonts
 
 import (
+	"gonetsurf/layouting/model"
 	"testing"
-
-	"gonetsurf/layouts"
 )
 
 func BenchmarkShapeSentence(b *testing.B) {
 	library := NewLibrary()
 	shaper := NewShaper(library)
-	run := layouts.TextRun{
+	run := model.TextRun{
 		Text:       "The quick brown fox jumps over the lazy dog.",
 		FontFamily: "Go",
 		FontSize:   16,

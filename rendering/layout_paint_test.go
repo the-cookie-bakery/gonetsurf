@@ -1,16 +1,17 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
+	layoutsoftware "gonetsurf/layouting/software"
 	"testing"
 
 	"gonetsurf/dom"
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/cssom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/styles"
 )
 
-func buildPaintTree(t *testing.T, source string, width, height int) (*layouts.Box, *styles.Engine, *dom.Document) {
+func buildPaintTree(t *testing.T, source string, width, height int) (*model.Box, *styles.Engine, *dom.Document) {
 	t.Helper()
 	document, err := html.ParseString(source, html.ParseOptions{})
 	if err != nil {
@@ -23,13 +24,13 @@ func buildPaintTree(t *testing.T, source string, width, height int) (*layouts.Bo
 		}
 		return true
 	})
-	root := layouts.BuildDocument(document, engine)
-	layout := layouts.New(float64(width), float64(height))
+	root := model.BuildDocument(document, engine)
+	layout := layoutsoftware.New(float64(width), float64(height))
 	layout.Layout(root)
 	return root, engine, document
 }
 
-func findPaintBox(t *testing.T, box *layouts.Box, id string) *layouts.Box {
+func findPaintBox(t *testing.T, box *model.Box, id string) *model.Box {
 	t.Helper()
 	if box == nil {
 		return nil
@@ -85,14 +86,14 @@ html, body { margin:0; padding:0 }
 	surface := NewSurface(200, 200)
 	surface.Clear(NewColor(255, 255, 255))
 	Paint(root, surface)
-	trackX := int(scroller.ContentX + scroller.ScrollportWidth() + layouts.ScrollbarThickness/2)
+	trackX := int(scroller.ContentX + scroller.ScrollportWidth() + model.ScrollbarThickness/2)
 	trackY := int(scroller.ContentY + 5)
 	pixel := pixelAt(surface, trackX, trackY)
 	if pixel.Red == 255 && pixel.Green == 255 && pixel.Blue == 255 {
 		t.Errorf("vertical scrollbar was not painted at (%d,%d)", trackX, trackY)
 	}
 	horizontalX := int(scroller.ContentX + 5)
-	horizontalY := int(scroller.ContentY + scroller.ScrollportHeight() + layouts.ScrollbarThickness/2)
+	horizontalY := int(scroller.ContentY + scroller.ScrollportHeight() + model.ScrollbarThickness/2)
 	pixel = pixelAt(surface, horizontalX, horizontalY)
 	if pixel.Red == 255 && pixel.Green == 255 && pixel.Blue == 255 {
 		t.Errorf("horizontal scrollbar was not painted at (%d,%d)", horizontalX, horizontalY)

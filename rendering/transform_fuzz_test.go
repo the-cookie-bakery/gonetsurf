@@ -1,9 +1,9 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"testing"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 )
 
@@ -22,7 +22,7 @@ func FuzzTransformFunction(f *testing.F) {
 	}
 	f.Fuzz(func(t *testing.T, source string) {
 		values := parser.ParseComponentValueList(source)
-		box := &layouts.Box{Width: 120, Height: 80}
+		box := &model.Box{Width: 120, Height: 80}
 		for _, value := range values {
 			if function, ok := value.(*parser.Function); ok {
 				_, _ = transformFunction(function, box)

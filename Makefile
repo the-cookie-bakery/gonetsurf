@@ -7,11 +7,11 @@ GO ?= go
 FUZZTIME ?= 10s
 BENCHTIME ?= 100x
 GO_FILES := $(shell git ls-files '*.go' | while read -r file; do [ -f "$$file" ] && echo "$$file"; done)
-SHADER_DIR := rendering/vulkan/shaders
-SHADER_SOURCES := $(wildcard $(SHADER_DIR)/*.vert $(SHADER_DIR)/*.frag $(SHADER_DIR)/*.comp)
+SHADER_DIRS := rendering/vulkan/shaders layouting/vulkan/shaders
+SHADER_SOURCES := $(foreach dir,$(SHADER_DIRS),$(wildcard $(dir)/*.vert $(dir)/*.frag $(dir)/*.comp))
 SHADER_TARGETS := $(SHADER_SOURCES:%=%.spv)
 
-.PHONY: all build vet fmt fmt-check deps-check test conformance compliance-tests fuzz bench corpus-refresh spec-refresh clean shaders vulkan-build vulkan-test vulkan-bench
+.PHONY: all build vet fmt fmt-check deps-check test conformance compliance-tests fuzz bench corpus-refresh spec-refresh clean shaders vulkan-build vulkan-test vulkan-bench vulkan-e2e vulkan-e2e-live vulkan-stress vulkan-check
 
 all: compliance-tests
 
@@ -91,15 +91,15 @@ spec-refresh:
 
 shaders: $(SHADER_TARGETS)
 
-$(SHADER_DIR)/%.vert.spv: $(SHADER_DIR)/%.vert
+%.vert.spv: %.vert
 	glslc -fshader-stage=vert "$<" -o "$@"
 	spirv-val "$@"
 
-$(SHADER_DIR)/%.frag.spv: $(SHADER_DIR)/%.frag
+%.frag.spv: %.frag
 	glslc -fshader-stage=frag "$<" -o "$@"
 	spirv-val "$@"
 
-$(SHADER_DIR)/%.comp.spv: $(SHADER_DIR)/%.comp
+%.comp.spv: %.comp
 	glslc -fshader-stage=comp "$<" -o "$@"
 	spirv-val "$@"
 
@@ -108,10 +108,29 @@ vulkan-build: shaders
 	CGO_ENABLED=1 $(GO) build -tags vulkan ./...
 
 vulkan-test: shaders
-	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... -count=1
+	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... ./layouting/... -count=1
 
 vulkan-bench: shaders
-	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... -run=^$$ -bench=. -benchtime=$(BENCHTIME)
+	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... ./layouting/... -run=^$$ -bench=. -benchtime=$(BENCHTIME)
+
+# Offline website snapshot parity; the primary local Vulkan gate. No network.
+vulkan-e2e: shaders
+	GONETSURF_VULKAN_NO_FALLBACK=1 CGO_ENABLED=1 $(GO) test -tags vulkan ./layouting/vulkan/ -run TestWebsiteSnapshotParity -count=1 -v
+
+# Opt-in live network check.
+vulkan-e2e-live: shaders
+	GONETSURF_E2E=1 CGO_ENABLED=1 $(GO) test -tags vulkan ./layouting/vulkan/ -run TestWebsiteParity -count=1 -v
+
+# Deep-tree, aux-scratch, and nested-scroll stress tests.
+vulkan-stress: shaders
+	GONETSURF_VULKAN_STRESS=1 GONETSURF_VULKAN_NO_FALLBACK=1 CGO_ENABLED=1 $(GO) test -tags vulkan ./layouting/vulkan/ -run 'TestVulkan(Stress|Deep|Nested)' -count=1 -v
+
+# Local Vulkan gate: build, tagged tests, offline e2e, and a bench smoke run.
+vulkan-check: shaders
+	CGO_ENABLED=1 $(GO) build -tags vulkan ./...
+	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... ./layouting/... -count=1
+	$(MAKE) vulkan-e2e
+	GONETSURF_VULKAN_NO_FALLBACK=1 CGO_ENABLED=1 $(GO) test -tags vulkan ./layouting/vulkan/ -run=^$$ -bench='Layout' -benchtime=1x
 
 clean:
 	$(GO) clean ./...

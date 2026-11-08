@@ -677,8 +677,112 @@ is implemented for the offscreen GPU path: solid fills, CPU coverage masks,
 gradients, images, glyphs, masks, blend-pixel groups, and opacity/masked layers
 render through Vulkan and are read back into a surface. Non-identity transformed
 layers fall back to software; GPU path/gradient/glyph pipelines and the X11
-swapchain presenter remain. See [`rendering-refactor.md`](../rendering-refactor.md).
+swapchain presenter remain. See the Vulkan completion tasks below.
 
+---
+
+## Phase 12 — Layout Backends
+
+**Goal:** split layout into backend-neutral contracts with software and Vulkan
+compute pipelines, and make reflow incremental and resource-aware.
+
+### Tasks
+
+- **P12-LAYOUT-001** Package split and contracts.
+  - Deliverable: `layouting/model`, `layouting/interfaces`,
+    `layouting/software`, `layouting/backends`, and removal of the old
+    `layouts` package and compatibility aliases.
+  - Acceptance: all existing tests pass; no behavior change.
+  - Spec: N/A.
+- **P12-LAYOUT-002** Layout backend selection.
+  - Deliverable: `SelectPipeline`; `--renderer=vulkan` selects the Vulkan layout
+    backend; `rendering.Options.LayoutBackend`.
+  - Acceptance: software remains the default; missing Vulkan tag reports a clear
+    error.
+  - Spec: N/A.
+- **P12-LAYOUT-003** Incremental invalidation and damage.
+  - Deliverable: dirty reasons, resource epochs, per-box generation stamps,
+    damage rectangles, pending resources.
+  - Acceptance: incremental reflow matches full layout.
+  - Spec: N/A.
+- **P12-LAYOUT-004** Draw while assets load.
+  - Deliverable: provisional replaced-element sizing, image/font load callbacks,
+    non-blocking image peeking, resource-triggered reflow.
+  - Acceptance: first frame paints with placeholders; decoded assets trigger a
+    damage-only refinement.
+  - Spec: N/A.
+- **P12-LAYOUT-005** Budgeted scheduler.
+  - Deliverable: `layouting.Scheduler` queuing resource work with a Step API.
+  - Acceptance: shell can interleave layout work between frames.
+  - Spec: N/A.
+- **P12-LAYOUT-006** Vulkan compute bridge.
+  - Deliverable: storage buffers, compute pipelines, dispatch, barriers, and
+    readback in `layouting/vulkan/internal/gpu`.
+  - Acceptance: tagged build compiles; shader validation passes.
+  - Spec: N/A.
+- **P12-LAYOUT-007** GPU intrinsic and used-width passes.
+  - Deliverable: flat node buffer, bottom-up intrinsic sizes, top-down widths,
+    min/max and percentage resolution.
+  - Acceptance: block parity suite within tolerance.
+  - Spec: N/A.
+- **P12-LAYOUT-008** GPU block stacking and margin collapsing.
+  - Deliverable: per-container block flow, sibling/parent margin collapse,
+    replaced element sizing.
+  - Acceptance: block parity suite within tolerance.
+  - Spec: N/A.
+- **P12-LAYOUT-009** GPU inline layout.
+  - Deliverable: inline run placement and line wrapping.
+  - Acceptance: inline parity cases.
+  - Spec: N/A.
+- **P12-LAYOUT-010** GPU flex and grid.
+  - Deliverable: per-container iterative flex/grid passes.
+  - Acceptance: flex/grid parity subset.
+  - Spec: N/A.
+- **P12-LAYOUT-011** GPU tables, positioning, overflow, damage.
+  - Deliverable: table track sizing, absolute/fixed placement, overflow
+    reduction, damage comparison.
+  - Acceptance: parity subset and damage tests.
+  - Spec: N/A.
+- **P12-LAYOUT-012** Parity, benchmarks, and documentation.
+  - Deliverable: tagged parity suite, GPU benchmarks, `layouting-refactor.md`.
+  - Acceptance: `make vulkan-test` green on a Vulkan device.
+  - Spec: N/A.
+
+**Status:** `001`–`014` are implemented. The Vulkan engine runs intrinsic,
+width, block stacking, algebraic margin collapse, inline line boxes, flex,
+grid, table, floats, positioning, vertical writing, overflow, and damage on
+compute shaders; dispatches are batched and GPU geometry queries are
+available. The full layout conformance corpus passes through the Vulkan
+engine. Shared-device and renderer-only paint handoff work (`015`–`016`)
+remain planned (see [`layouting-refactor.md`](../layouting-refactor.md)).
+
+---
+
+## Phase 12b — Vulkan Parity Completion
+
+**Goal:** reach feature and test parity between the software and Vulkan
+rendering/layout pipelines with no runtime software fallback on the Vulkan path.
+
+| ID | Task | Status |
+|---|---|---|
+| P12-LAYOUT-017 | Remove `calc()` fallback; complete GPU calc resolution | Verified |
+| P12-LAYOUT-018 | Full flex/inline real-page parity | Implemented |
+| P12-LAYOUT-019 | Grid/table/positioning/vertical parity expansion | Implemented |
+| P12-LAYOUT-020 | Incremental GPU layout and GPU damage | Verified |
+| P12-LAYOUT-021 | Shared Vulkan device | Verified |
+| P12-LAYOUT-022 | Complete GPU geometry queries | Verified |
+| P11-RENDER-006 | GPU paths/strokes | Verified |
+| P11-RENDER-007 | GPU gradients | Verified |
+| P11-RENDER-008 | Glyph atlas and batching | Implemented |
+| P11-RENDER-009 | GPU layer/blend/transformed-layer composition | Verified |
+| P11-RENDER-010 | X11 swapchain presenter | Verified |
+| P11-RENDER-011 | GPU-resident paint handoff | Verified |
+| P11-RENDER-012 | Vulkan benchmarks and local parity gates | Verified |
+
+**Status:** All Phase 12b tasks are implemented and verified locally. Layout and
+rendering share one Vulkan device; paths, strokes, gradients, glyphs, and layers
+run on the GPU; node geometry is handed off through `GeometryHandle`; and X11
+presentation uses a `VK_KHR_xcb_surface` swapchain.
 ---
 
 ## Phase 8 — Window and UI Shell

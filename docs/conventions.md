@@ -13,7 +13,7 @@
 ## 2. Package and file layout
 
 - Category packages use plural names: `parsers`, `protocols`, `caches`, `storages`,
-  `layouts`, `windowing`, `rendering`, `brokers`, `engines`, `adapters`.
+  `layouting`, `windowing`, `rendering`, `brokers`, `engines`, `adapters`.
 - The DOM package is `dom` (singular), per explicit decision.
 - Each package has a `doc.go` describing its scope in a short paragraph.
 - Subpackages are narrow and named for the concept they own, not for the layer:

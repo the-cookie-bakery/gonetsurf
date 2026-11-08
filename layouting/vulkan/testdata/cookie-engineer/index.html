@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Cookie Engineer's Website</title>
+
+		<!-- Meta -->
+		<meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-status-bar-style" content="black-translucent">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="creator" content="Cookie Engineer">
+		<meta name="description" content="Cookie Engineer's Ideas and Projects">
+		<meta name="keywords" content="AI, LLM, Cyber Security, Cyber Defense, Pentesting, Purpleteaming, Malware Development">
+		<meta name="generator" content="Cookie Engineer's hands with peppermint tea and nightly VIM sessions">
+		<meta name="robots" content="index, follow">
+
+		<!-- RSS Feeds -->
+		<link rel="alternate" type="application/rss+xml" title="Cookie Engineer's Weblog" href="https://cookie.engineer/weblog/feed.xml">
+		<link rel="alternate" type="application/rss+xml" title="Cookie Engineer's Wiki" href="https://cookie.engineer/wiki/feed.xml">
+
+		<!-- Social Media -->
+		<meta property="og:title" content="Cookie Engineer's Website">
+		<meta property="og:site_name" content="Cookie Engineer's Website">
+		<meta property="og:description" content="Cookie Engineer's Ideas and Projects">
+		<meta property="og:image" itemprop="image" content="https://cookie.engineer/design/about/cookiengineer.png">
+		<meta property="og:url" content="https://cookie.engineer/index.html">
+		<meta property="og:type" content="website">
+
+		<!-- Shitter -->
+		<meta name="twitter:card" content="summary">
+		<meta name="twitter:domain" content="cookie.engineer">
+		<meta name="twitter:title" itemprop="name" content="Cookie Engineer's Website">
+		<meta name="twitter:description" itemprop="description" content="Cookie Engineer's Ideas and Projects">
+		<meta name="twitter:image" itemprop="image" content="https://cookie.engineer/design/about/cookiengineer.png">
+
+		<!-- Website Design -->
+		<link rel="stylesheet" href="/design/index.css">
+		<script type="module" src="/design/index.mjs" defer></script>
+
+		<!-- Website Consent Game -->
+		<link rel="stylesheet" href="/design/consent/index.css">
+		<script type="module" src="/design/consent/index.mjs" defer></script>
+
+		<!-- Website Consent Game Fixes -->
+		<script>
+			let min_width    = 800;
+			let max_width    = 1280;
+			let device_width = window.innerWidth;
+
+			if (device_width < max_width) {
+
+				let scale = (device_width / min_width);
+				if (scale > 1.0) {
+					scale = 1.0;
+				}
+
+				let viewport_meta = document.getElementById("viewport");
+				if (viewport_meta !== null) {
+					viewport_meta.setAttribute("content", `width=${min_width}, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale=${scale}, user-scalable=no`);
+				}
+
+			}
+		</script>
+	</head>
+	<body data-layout="index">
+		<header>
+			<div><button data-action="toggle-aside" title="Toggle Sidebar" class="visible"></button><button data-action="toggle-theme" title="Switch Dark/Light Theme"></button><button data-action="toggle-font" title="Switch Dyslexic/Normal Fonts"></button></div>
+			<div><img src="/design/about/cookiengineer.png" width="32" height="32" /><h1><a href="/index.html">Cookie Engineer's Website</a></h1></div>
+			<div></div>
+		</header>
+
+		<div>
+			<aside class="visible">
+				<ul>
+					<li>
+						<b>About</b>
+						<ul>
+							<li><a href="/about/me.html">About Me</a></li>
+							<li><a href="/about/my-work.html">About My Work</a></li>
+							<li><a href="/about/talks.html">Cookie's Conf Talks</a></li>
+							<li><a href="/about/writeups.html">Cookie's CTF Writeups</a></li>
+							<li><a href="/projects/index.html">Cookie's Projects</a></li>
+							<li><a href="/weblog/index.html">Cookie's Weblog</a></li>
+							<li><a href="/wiki/index.html">Cookie's Wiki</a></li>
+							<li><a href="/contact/me.html">Contact Me</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>Hardware</b>
+						<ul>
+							<li><a href="/projects/hardware/anet-a8.html">Anet A8</a></li>
+							<li><a href="/projects/hardware/gameboy-advance.html">Gameboy Advance</a></li>
+							<li><a href="/projects/hardware/hackberry-pi.html">Hackberry Pi</a></li>
+							<li><a href="/projects/hardware/switchine.html">Switchine</a></li>
+						</ul>
+					</li>
+					<li>
+						<b><abbr title="Let's call it Agentic Purpleteaming">Agentic Research</abbr></b>
+						<ul>
+							<li><a title="Under active development" href="/projects/agentic-research/exocomp.html">Exocomp 🚧</a></li>
+							<li><a href="/projects/agentic-research/goaccess.html">GoAccess</a></li>
+							<li><a title="Under active development" href="/projects/agentic-research/gobayashi.html">GoBayashi 🚧</a></li>
+							<li><a href="/projects/agentic-research/goganet.html">GoGANet</a></li>
+							<li><a href="/projects/agentic-research/gonano.html">GoNano</a></li>
+							<li><a href="/projects/agentic-research/goneat.html">GoNEAT</a></li>
+							<li><a title="Under active development" href="/projects/agentic-research/goroot.html">GoRoot 🚧</a></li>
+							<li><a title="Under active development" href="/projects/agentic-research/gosql.html">GoSQL 🚧</a></li>
+							<li><a title="Under active development" href="/projects/agentic-research/gowifi.html">GoWIFI 🚧</a></li>
+							<li><a href="/projects/agentic-research/opencode-reasoning-extractor.html">Opencode SFT Extractor</a></li>
+							<li><a href="/projects/agentic-research/qwen-reasoning-trainer.html">Qwen 3.8 SFT Trainer</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>Cyber Defense</b>
+						<ul>
+							<li><a href="/projects/cyber-defense/antibote.html">Antibote</a></li>
+							<li><a href="/projects/cyber-defense/antimiasma.html">Antimiasma</a></li>
+							<li><a href="/projects/cyber-defense/antispam.html">Antispam</a></li>
+							<li><a title="Under active development" href="/projects/cyber-defense/rogueberry.html">RogueBerry One 🚧</a></li>
+							<li><a title="Classified project, needs a password for decryption" href="/decrypt.html?file=/projects/cyber-defense/tholian-convoy.md">Tholian Convoy 🔒</a></li>
+							<li><a title="Classified project, needs a password for decryption" href="/decrypt.html?file=/projects/cyber-defense/tholian-detective.md">Tholian Detective 🔒</a></li>
+							<li><a href="/projects/cyber-defense/tholian-firewall.html">Tholian Firewall</a></li>
+							<li><a title="Classified project, needs a password for decryption" href="/decrypt.html?file=/projects/cyber-defense/tholian-guard.md">Tholian Guard 🔒</a></li>
+							<li><a title="Classified project, needs a password for decryption" href="/decrypt.html?file=/projects/cyber-defense/tholian-intel.md">Tholian Intel 🔒</a></li>
+							<li><a title="Classified project, needs a password for decryption" href="/decrypt.html?file=/projects/cyber-defense/tholian-stealth.md">Tholian Stealth 🔒</a></li>
+							<li><a href="/projects/cyber-defense/tholian-warps.html">Tholian Warps</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>Cyber Security</b>
+						<ul>
+							<li><a href="/projects/cyber-security/dnsquery.html">DNS Query</a></li>
+							<li><a href="/projects/cyber-security/forensics-tools.html">Forensics Tools</a></li>
+							<li><a href="/projects/cyber-security/stegit.html">StegIt</a></li>
+						</ul>
+					</li>
+					<li>
+						<b><abbr title="Development and Operations">Dev Ops</abbr></b>
+						<ul>
+							<li><a href="/projects/development/agenda.html">Agenda</a></li>
+							<li><a href="/projects/development/git-evac.html">Git EVAC</a></li>
+							<li><a href="/projects/development/git-identity.html">Git Identity</a></li>
+							<li><a href="/projects/development/golpm.html">GoLPM</a></li>
+							<li><a href="/projects/development/golocron.html">Golocron</a></li>
+							<li><a href="/projects/development/gooey.html">Gooey Framework</a></li>
+							<li><a title="Under active development" href="/projects/development/gooey-cli.html">Gooey CLI 🚧</a></li>
+							<li><a href="/projects/development/gows.html">GoWS</a></li>
+							<li><a href="/projects/development/gozim.html">GoZIM</a></li>
+							<li><a href="/projects/development/hydra.html">Hydra</a></li>
+							<li><a href="/projects/development/i3-brightnessctl.html">i3 BrightnessCTL</a></li>
+							<li><a href="/projects/development/pacman-backup.html">Pacman Backup</a></li>
+							<li><a href="/projects/development/pwettify.html">Pwettify</a></li>
+							<li><a href="/projects/development/retrokit.html">RetroKit</a></li>
+							<li><a href="/projects/development/system-integrity.html">System Integrity</a></li>
+							<li><a href="/projects/development/system-panel.html">System Panel</a></li>
+							<li><a title="Under active development" href="/projects/development/zimdex.html">ZIMdex 🚧</a></li>
+							<li><a href="/projects/development/universal-translator.html">Universal Translator</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>Tutorials</b>
+						<ul>
+							<li><a href="/tutorials/ai-1-flappy-evolution/index.html">AI #1: Flappy Evolution</a></li>
+							<li><a href="/tutorials/ai-2-pong/index.html">AI #2: Reinforced Pong</a></li>
+							<li><a href="/tutorials/ai-3-pong-evolution/index.html">AI #3: Pong Evolution</a></li>
+						</ul>
+					</li>
+					<li>
+						<b><abbr title="Currently unmaintained Software">Archive</abbr></b>
+						<ul>
+							<li><a href="/projects/archive/dns-proxy.html">DNS Proxy</a></li>
+							<li><a href="/projects/archive/gibook-editor.html">GIBook Editor</a></li>
+							<li><a href="/projects/archive/git-work.html">Git Work</a></li>
+							<li><a href="/projects/archive/jquery-desktop.html">jQuery Desktop</a></li>
+							<li><a href="/projects/archive/lycheejs-breeder.html">lychee.js Breeder</a></li>
+							<li><a href="/projects/archive/lycheejs-engine.html">lychee.js Engine</a></li>
+							<li><a href="/projects/archive/lycheejs-fertilizer.html">lychee.js Fertilizer</a></li>
+							<li><a href="/projects/archive/lycheejs-harvester.html">lychee.js Harvester</a></li>
+							<li><a href="/projects/archive/polyfillr.html">Polyfillr Framework</a></li>
+							<li><a href="/projects/archive/webmail-me.html">Webmail.me</a></li>
+							<li><a href="/projects/archive/webslide-me.html">Webslide.me</a></li>
+							<li><a href="/projects/archive/zynga-jukebox.html">Zynga Jukebox</a></li>
+							<li><a href="/projects/archive/zynga-speedrun.html">Zynga Speedrun</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>Browser Extensions</b>
+						<ul>
+							<li><a href="/projects/browser-extensions/block-block.html">Block Block</a></li>
+							<li><a href="/projects/browser-extensions/defiant.html">Defiant</a></li>
+							<li><a href="/projects/browser-extensions/github-scrumboard.html">GitHub Scrumboard</a></li>
+							<li><a href="/projects/browser-extensions/me-want-cookies.html">Me Want Cookies</a></li>
+						</ul>
+					</li>
+					<li>
+						<b>GNOME Extensions</b>
+						<ul>
+							<li><a href="/projects/gnome-shell-extensions/outta-space.html">Outta Space</a></li>
+						</ul>
+					</li>
+				</ul>
+			</aside>
+
+			<main>
+				<figure id="avatar">
+					<img alt="Cookie Engineer's Avatar" src="/design/about/cookiengineer.png" width="256" height="256"/>
+					<figcaption>
+						Hello, I'm <b>Cookie Engineer</b>,<br/>
+						a Cyber Defense Engineer with AI, NetSec, WebSec, and OSINT experience.
+					</figcaption>
+				</figure>
+				<article>
+					<section class="timeline">
+						<h3>Latest Projects</h3>
+						<article>
+							<img alt="Qwen 3.8 Reasoning Trainer" class="teaser" src="/projects/agentic-research/qwen-reasoning-trainer/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/qwen-reasoning-trainer.html" target="_blank">Qwen 3.8 Reasoning Trainer</a><time datetime="2026-10-17">2026-10-17</time></h4>
+								<p>
+									Abliterating and Fine-Tuning Qwen3.8 27B in Pure Go on Vulkan
+									<br><a href="/projects/agentic-research/qwen-reasoning-trainer.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Opencode Reasoning Extractor" class="teaser" src="/projects/agentic-research/opencode-reasoning-extractor/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/opencode-reasoning-extractor.html" target="_blank">Opencode Reasoning Extractor</a><time datetime="2026-10-17">2026-10-17</time></h4>
+								<p>
+									Reusing Opencode Agent Traces as Free SFT Reasoning Traces Data for Qwen 3.8
+									<br><a href="/projects/agentic-research/opencode-reasoning-extractor.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="privacy"><a href="#?tag=privacy">privacy</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="GoGANet" class="teaser" src="/projects/agentic-research/goganet/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/goganet.html" target="_blank">GoGANet</a><time datetime="2026-09-26">2026-09-26</time></h4>
+								<p>
+									Detecting Malicious Network Traffic with a Wasserstein GAN in Pure Go
+									<br><a href="/projects/agentic-research/goganet.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="blueteam"><a href="#?tag=blueteam">blueteam</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="network"><a href="#?tag=network">network</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="GoNano" class="teaser" src="/projects/agentic-research/gonano/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/gonano.html" target="_blank">GoNano</a><time datetime="2026-09-25">2026-09-25</time></h4>
+								<p>
+									Pure-Go DeepSeek V4.1-Flash Inference with Mixture-of-Experts Sharding
+									<br><a href="/projects/agentic-research/gonano.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="GoNEAT" class="teaser" src="/projects/agentic-research/goneat/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/goneat.html" target="_blank">GoNEAT</a><time datetime="2026-09-20">2026-09-20</time></h4>
+								<p>
+									A Go Decision Engine for Evolving and Gradient-Training HyperNEAT Agents
+									<br><a href="/projects/agentic-research/goneat.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Tholian Firewall" class="teaser" src="/projects/cyber-defense/tholian-firewall/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/cyber-defense/tholian-firewall.html" target="_blank">Tholian Firewall</a><time datetime="2026-09-19">2026-09-19</time></h4>
+								<p>
+									Kernel-Speed eBPF Packet Filtering for Go Backends
+									<br><a href="/projects/cyber-defense/tholian-firewall.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="blueteam"><a href="#?tag=blueteam">blueteam</a></dd>
+									<dd data-key="tag" data-val="c"><a href="#?tag=c">c</a></dd>
+									<dd data-key="tag" data-val="cyber-defense"><a href="#?tag=cyber-defense">cyber-defense</a></dd>
+									<dd data-key="tag" data-val="ebpf"><a href="#?tag=ebpf">ebpf</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="network"><a href="#?tag=network">network</a></dd>
+									<dd data-key="tag" data-val="security"><a href="#?tag=security">security</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="GoSQL" class="teaser" src="/projects/agentic-research/gosql/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/agentic-research/gosql.html" target="_blank">GoSQL</a><time datetime="2026-09-15">2026-09-15</time></h4>
+								<p>
+									Pure-Go SQL Injection Fuzzer and Database Takeover Tool
+									<br><a href="/projects/agentic-research/gosql.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="agentic-research"><a href="#?tag=agentic-research">agentic-research</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="purpleteam"><a href="#?tag=purpleteam">purpleteam</a></dd>
+									<dd data-key="tag" data-val="redteam"><a href="#?tag=redteam">redteam</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Universal Translator" class="teaser" src="/projects/development/universal-translator/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/projects/development/universal-translator.html" target="_blank">Universal Translator</a><time datetime="2026-09-15">2026-09-15</time></h4>
+								<p>
+									Offline GTK4 Translation App using Bergamot Models
+									<br><a href="/projects/development/universal-translator.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="development"><a href="#?tag=development">development</a></dd>
+									<dd data-key="tag" data-val="golang"><a href="#?tag=golang">golang</a></dd>
+									<dd data-key="tag" data-val="privacy"><a href="#?tag=privacy">privacy</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+
+					</section>
+				</article>
+				<article id="results">
+					<section class="timeline">
+						<h3>Latest Weblog Articles</h3>
+						<article>
+							<img alt="Write Linters and Tools Before Code" class="teaser" src="/weblog/articles/write-linters-and-tools-before-code/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/write-linters-and-tools-before-code.html" target="_blank">Write Linters and Tools Before Code</a><time datetime="2026-09-16">2026-09-16</time></h4>
+								<p>
+									Why linters and tools must exist before non-deterministic agents do the gruntwork.
+									<br><a href="/weblog/articles/write-linters-and-tools-before-code.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="development"><a href="#?tag=development">development</a></dd>
+									<dd data-key="tag" data-val="llm"><a href="#?tag=llm">llm</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+									<dd data-key="tag" data-val="tooling"><a href="#?tag=tooling">tooling</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="LLM Jailbreak Techniques" class="teaser" src="/weblog/articles/llm-jailbreak-techniques/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/llm-jailbreak-techniques.html" target="_blank">LLM Jailbreak Techniques</a><time datetime="2026-07-15">2026-07-15</time></h4>
+								<p>
+									A list of known-to-work techniques for jailbreaking language models.
+									<br><a href="/weblog/articles/llm-jailbreak-techniques.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="development"><a href="#?tag=development">development</a></dd>
+									<dd data-key="tag" data-val="llm"><a href="#?tag=llm">llm</a></dd>
+									<dd data-key="tag" data-val="software"><a href="#?tag=software">software</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Malware Insights: Miasma Campaign" class="teaser" src="/weblog/articles/malware-insights-miasma-campaign/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/malware-insights-miasma-campaign.html" target="_blank">Malware Insights: Miasma Campaign</a><time datetime="2026-06-01">2026-06-01</time></h4>
+								<p>
+									How to use AI and IDE settings to implant a node.js or bun based self-spreading Worm
+									<br><a href="/weblog/articles/malware-insights-miasma-campaign.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="apt28"><a href="#?tag=apt28">apt28</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="macos"><a href="#?tag=macos">macos</a></dd>
+									<dd data-key="tag" data-val="malware"><a href="#?tag=malware">malware</a></dd>
+									<dd data-key="tag" data-val="teampcp"><a href="#?tag=teampcp">teampcp</a></dd>
+									<dd data-key="tag" data-val="windows"><a href="#?tag=windows">windows</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Malware Insights: MacOS Phexia Stealer" class="teaser" src="/weblog/articles/malware-insights-macos-phexia-stealer/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/malware-insights-macos-phexia-stealer.html" target="_blank">Malware Insights: MacOS Phexia Stealer</a><time datetime="2026-03-15">2026-03-15</time></h4>
+								<p>
+									How to steal every password and credential of MacOS users
+									<br><a href="/weblog/articles/malware-insights-macos-phexia-stealer.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="macos"><a href="#?tag=macos">macos</a></dd>
+									<dd data-key="tag" data-val="malware"><a href="#?tag=malware">malware</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Malware Insights: MacOS Phexia Campaign" class="teaser" src="/weblog/articles/malware-insights-macos-phexia-campaign/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/malware-insights-macos-phexia-campaign.html" target="_blank">Malware Insights: MacOS Phexia Campaign</a><time datetime="2026-03-14">2026-03-14</time></h4>
+								<p>
+									How to use Clickfix to implant an AppleScript based Bot on MacOS
+									<br><a href="/weblog/articles/malware-insights-macos-phexia-campaign.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="apt28"><a href="#?tag=apt28">apt28</a></dd>
+									<dd data-key="tag" data-val="macos"><a href="#?tag=macos">macos</a></dd>
+									<dd data-key="tag" data-val="malware"><a href="#?tag=malware">malware</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Linux Predictable Interface Names" class="teaser" src="/weblog/articles/linux-predictable-interface-names/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/linux-predictable-interface-names.html" target="_blank">Linux Predictable Interface Names</a><time datetime="2026-02-20">2026-02-20</time></h4>
+								<p>
+									How to rename network interfaces predictably with udev rules and systemd link files.
+									<br><a href="/weblog/articles/linux-predictable-interface-names.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="devops"><a href="#?tag=devops">devops</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Bluetooth Headphones on Linux" class="teaser" src="/weblog/articles/unsupported-bluetooth-headphones-on-linux/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/unsupported-bluetooth-headphones.html" target="_blank">Bluetooth Headphones on Linux</a><time datetime="2026-01-10">2026-01-10</time></h4>
+								<p>
+									How to manage and use unsupported Bluetooth headphones on Linux with bluetoothctl.
+									<br><a href="/weblog/articles/unsupported-bluetooth-headphones.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="bluetooth"><a href="#?tag=bluetooth">bluetooth</a></dd>
+									<dd data-key="tag" data-val="devops"><a href="#?tag=devops">devops</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="Making of My Website Part 2" class="teaser" src="/weblog/articles/making-of-my-website/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/weblog/articles/making-of-my-website-part-2.html" target="_blank">Making of My Website Part 2</a><time datetime="2025-12-25">2025-12-25</time></h4>
+								<p>
+									The Making of the Cookie Engineer Avatar
+									<br><a href="/weblog/articles/making-of-my-website-part-2.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="gamedev"><a href="#?tag=gamedev">gamedev</a></dd>
+								</dl>
+							</div>
+						</article>
+
+					</section>
+					<section class="timeline">
+						<h3>Latest Wiki Articles</h3>
+						<article>
+							<img alt="Privilege Escalation" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/index.html" target="_blank">Privilege Escalation</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									Learning Path for Linux Privilege Escalation Exploits
+									<br><a href="/wiki/articles/privilege-escalation/index.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="cve"><a href="#?tag=cve">cve</a></dd>
+									<dd data-key="tag" data-val="exploits"><a href="#?tag=exploits">exploits</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2026-46300 - Fragnesia Bypass" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2026-46300.html" target="_blank">CVE-2026-46300 - Fragnesia Bypass</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									SKBFL_SHARED_FRAG is lost during skb coalescing, bypassing the DirtyFrag patch and re-enabling in-place ESP decryption over file-backed memory.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2026-46300.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="bypass"><a href="#?tag=bypass">bypass</a></dd>
+									<dd data-key="tag" data-val="coalesce"><a href="#?tag=coalesce">coalesce</a></dd>
+									<dd data-key="tag" data-val="esp"><a href="#?tag=esp">esp</a></dd>
+									<dd data-key="tag" data-val="fragnesia"><a href="#?tag=fragnesia">fragnesia</a></dd>
+									<dd data-key="tag" data-val="ipsec"><a href="#?tag=ipsec">ipsec</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="page-cache"><a href="#?tag=page-cache">page-cache</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="skb"><a href="#?tag=skb">skb</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2026-43503 - DirtyClone" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2026-43503.html" target="_blank">CVE-2026-43503 - DirtyClone</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									SKBFL_SHARED_FRAG flag lost during packet cloning in __pskb_copy_fclone and skb_shift, enabling in-place ESP decryption over file-backed page-cache memory to gain root.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2026-43503.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="dirtyclone"><a href="#?tag=dirtyclone">dirtyclone</a></dd>
+									<dd data-key="tag" data-val="dirtyfrag"><a href="#?tag=dirtyfrag">dirtyfrag</a></dd>
+									<dd data-key="tag" data-val="esp"><a href="#?tag=esp">esp</a></dd>
+									<dd data-key="tag" data-val="fclone"><a href="#?tag=fclone">fclone</a></dd>
+									<dd data-key="tag" data-val="ipsec"><a href="#?tag=ipsec">ipsec</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="page-cache"><a href="#?tag=page-cache">page-cache</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="skb-shift"><a href="#?tag=skb-shift">skb-shift</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2026-43284 - DirtyFrag" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2026-43284.html" target="_blank">CVE-2026-43284 - DirtyFrag</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									SKBFL_SHARED_FRAG flag omission on UDP spliced packets enabling in-place ESP decryption over file-backed page-cache memory.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2026-43284.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="dirtyfrag"><a href="#?tag=dirtyfrag">dirtyfrag</a></dd>
+									<dd data-key="tag" data-val="esp"><a href="#?tag=esp">esp</a></dd>
+									<dd data-key="tag" data-val="ipsec"><a href="#?tag=ipsec">ipsec</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="page-cache"><a href="#?tag=page-cache">page-cache</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="skb"><a href="#?tag=skb">skb</a></dd>
+									<dd data-key="tag" data-val="splice"><a href="#?tag=splice">splice</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2026-31431 - Copy Fail" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2026-31431.html" target="_blank">CVE-2026-31431 - Copy Fail</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									In-place AEAD decryption over shared pipe page fragments in the AF_ALG socket interface enabling unprivileged write to file-backed memory.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2026-31431.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="af-alg"><a href="#?tag=af-alg">af-alg</a></dd>
+									<dd data-key="tag" data-val="algif-aead"><a href="#?tag=algif-aead">algif-aead</a></dd>
+									<dd data-key="tag" data-val="copy-fail"><a href="#?tag=copy-fail">copy-fail</a></dd>
+									<dd data-key="tag" data-val="crypto"><a href="#?tag=crypto">crypto</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="page-cache"><a href="#?tag=page-cache">page-cache</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="splice"><a href="#?tag=splice">splice</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2024-1086 - nf_tables Use-After-Free" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2024-1086.html" target="_blank">CVE-2024-1086 - nf_tables Use-After-Free</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									Double-free in the Linux kernel netfilter nf_tables verdict handling that becomes a use-after-free and yields local privilege escalation.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2024-1086.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="netfilter"><a href="#?tag=netfilter">netfilter</a></dd>
+									<dd data-key="tag" data-val="nf-tables"><a href="#?tag=nf-tables">nf-tables</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="use-after-free"><a href="#?tag=use-after-free">use-after-free</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2023-32629 - OverlayFS Copy-Up" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2023-32629.html" target="_blank">CVE-2023-32629 - OverlayFS Copy-Up</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									Ubuntu-specific OverlayFS flaw that copies file capabilities to the upper layer without scoping them to the user namespace, enabling local privilege escalation.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2023-32629.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="capabilities"><a href="#?tag=capabilities">capabilities</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="overlayfs"><a href="#?tag=overlayfs">overlayfs</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="ubuntu"><a href="#?tag=ubuntu">ubuntu</a></dd>
+								</dl>
+							</div>
+						</article>
+						<article>
+							<img alt="CVE-2023-2640 - Ubuntu OverlayFS LPE" class="teaser" src="/wiki/articles/privilege-escalation/teaser.jpg" width="128" height="128"/>
+							<div class="content">
+								<h4><a href="/wiki/articles/privilege-escalation/linux/cve-2023-2640.html" target="_blank">CVE-2023-2640 - Ubuntu OverlayFS LPE</a><time datetime="2026-07-01">2026-07-01</time></h4>
+								<p>
+									Ubuntu's OverlayFS patch copies file capabilities without scoping them, letting a local user create a privileged executable.
+									<br><a href="/wiki/articles/privilege-escalation/linux/cve-2023-2640.html" target="_blank">Read More</a>
+								</p>
+								<dl class="tags">
+									<dt>Tags:</dt>
+									<dd data-key="tag" data-val="gameoverlay"><a href="#?tag=gameoverlay">gameoverlay</a></dd>
+									<dd data-key="tag" data-val="kernel"><a href="#?tag=kernel">kernel</a></dd>
+									<dd data-key="tag" data-val="linux"><a href="#?tag=linux">linux</a></dd>
+									<dd data-key="tag" data-val="overlayfs"><a href="#?tag=overlayfs">overlayfs</a></dd>
+									<dd data-key="tag" data-val="privilege-escalation"><a href="#?tag=privilege-escalation">privilege-escalation</a></dd>
+									<dd data-key="tag" data-val="ubuntu"><a href="#?tag=ubuntu">ubuntu</a></dd>
+								</dl>
+							</div>
+						</article>
+
+					</section>
+				</article>
+			</main>
+		</div>
+
+		<footer>
+			<div></div>
+			<div class="print-not">Made with 💔 in Germany. &copy; Cookie Engineer (https://cookie.engineer). All rights (and jokes) reserved under European Law.</div>
+			<div></div>
+		</footer>
+
+	</body>
+</html>

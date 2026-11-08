@@ -2,7 +2,9 @@ package rendering
 
 import (
 	"gonetsurf/dom"
-	"gonetsurf/layouts"
+	layoutinterfaces "gonetsurf/layouting/interfaces"
+	"gonetsurf/layouting/model"
+	layoutsoftware "gonetsurf/layouting/software"
 	"gonetsurf/rendering/fonts"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/rendering/software"
@@ -12,11 +14,12 @@ import (
 
 // Options configures a render pass.
 type Options struct {
-	Images     ImageProvider
-	LoadFont   fonts.Loader
-	Subframes  SubframeProvider
-	Renderer   interfaces.Renderer
-	AsyncFonts bool
+	Images        ImageProvider
+	LoadFont      fonts.Loader
+	Subframes     SubframeProvider
+	Renderer      interfaces.Renderer
+	LayoutBackend layoutinterfaces.Backend
+	AsyncFonts    bool
 }
 
 // SubframeProvider supplies rendered documents for nested browsing contexts.
@@ -48,11 +51,11 @@ func RenderDocumentWithOptions(document *dom.Document, engine *styles.Engine, wi
 }
 
 // RenderBox lays out an existing box tree and paints it into a new surface.
-func RenderBox(root *layouts.Box, width, height int) (interfaces.Surface, error) {
+func RenderBox(root *model.Box, width, height int) (interfaces.Surface, error) {
 	return renderBoxWithOptions(root, width, height, DataURLImageProvider{}, nil, fonts.Default())
 }
 
-func renderBoxWithOptions(root *layouts.Box, width, height int, provider ImageProvider, baseURL *urls.URL, library *fonts.Library) (interfaces.Surface, error) {
+func renderBoxWithOptions(root *model.Box, width, height int, provider ImageProvider, baseURL *urls.URL, library *fonts.Library) (interfaces.Surface, error) {
 	surface := software.NewSurface(width, height)
 	surface.Clear(NewColor(255, 255, 255))
 	if root == nil {
@@ -61,7 +64,7 @@ func renderBoxWithOptions(root *layouts.Box, width, height int, provider ImagePr
 	if library == nil {
 		library = fonts.Default()
 	}
-	layout := layouts.New(float64(width), float64(height))
+	layout := layoutsoftware.New(float64(width), float64(height))
 	layout.Shaper = fonts.NewShaper(library)
 	layout.Metrics = library.Metrics
 	layout.Layout(root)

@@ -792,6 +792,64 @@ A task reaches `Verified` only when `UT=Y`, `E2E=Y`, `Spec=Compliant`, and `Bugs
 | X-LOCAL-001 | UI localization and font fallback | Planned | - | - | Unassessed | - |
 | X-DEV-001 | Developer tools | Planned | - | - | N/A | - |
 
+## Layout backend progress
+
+- **P12-LAYOUT-001 — Verified:** layout lives in `layouting/model`,
+  `layouting/interfaces`, `layouting/software`, and `layouting/backends`; the
+  old `layouts` package and all compatibility aliases were removed. The full
+  test suite passes.
+- **P12-LAYOUT-002 — Verified:** `SelectPipeline` selects the renderer and
+  layout backend together, so `--renderer=vulkan` uses the Vulkan layout
+  pipeline. The default remains software.
+- **P12-LAYOUT-003 — Verified:** boxes carry resource epochs and generation
+  stamps; reflow produces damage rectangles and pending resources.
+- **P12-LAYOUT-004 — Verified:** replaced elements use provisional sizes while
+  images load; `ImageCache` completion callbacks mark image resources dirty.
+- **P12-LAYOUT-005 — Verified:** `layouting.Scheduler` queues resource work and
+  exposes `Step`.
+- **P12-LAYOUT-006 — Implemented:** the Vulkan compute bridge provides
+  host-visible storage buffers, compute pipelines, dispatch, barriers, and
+  readback.
+- **P12-LAYOUT-007 — Implemented:** GPU intrinsic and used-width passes run on
+  compute shaders; block parity tests pass within tolerance.
+- **P12-LAYOUT-008 — Implemented:** GPU block stacking implements parent/child
+  and sibling margin collapse plus provisional replaced sizing; block parity
+  tests pass.
+- **P12-LAYOUT-009 — Verified:** inline text is split into word boxes and
+  wrapped by the GPU inline pass, with text-align and vertical-align.
+- **P12-LAYOUT-010 — Verified:** GPU flex row/column layout handles grow,
+  wrapping, gaps, justify-content, align-items, and reverse direction.
+- **P12-LAYOUT-011 — Verified:** GPU grid tracks/placement/spans/alignment,
+  table columns/colspan/rowspan/border-collapse, floats/clear,
+  absolute/fixed/relative positioning, and vertical writing all pass the
+  conformance corpus.
+- **P12-LAYOUT-013 — Verified:** compute dispatches are batched into one
+  submit/wait; upload and geometry readback happen once per layout.
+- **P12-LAYOUT-014 — Verified:** GPU geometry queries implement hit-testing,
+  box rectangles, and scroll extents.
+- **P12-LAYOUT-017 — Verified:** the software `calc()` fallback was removed.
+  Width, height, min/max, flex-basis, and positioned offsets resolve calc()
+  percentages and absolute offsets on the GPU. `TestVulkanCalcParity` covers
+  nested calc, percentages, min/max, flex-basis, and positioned offsets.
+- **P12-LAYOUT-018–019 — Implemented:** real-page flex/inline, grid, table,
+  positioning, and vertical parity are covered by the complete-tree parity
+  corpus, the offline snapshot, and stress tests.
+- **P12-LAYOUT-022 — Verified:** GPU geometry queries apply nested scroll and
+  clip state; hit-test, `BoxRect`, and `MaxScroll` match software for nested
+  scroll containers. Fixed shader stacks were replaced with aux worklists and
+  contiguous subtree ranges.
+- **P12-LAYOUT-020 — Verified:** dirty closures, active-node dispatch
+  compaction, range-limited uploads, unchanged-relayout skipping, GPU-readback
+  damage, and budgeted completion are implemented.
+- **P12-LAYOUT-021 — Verified:** `internal/vulkandevice` owns the shared
+  instance/physical device/device/queue; layout and rendering both adopt the
+  handles and serialize submissions.
+- **P12-LAYOUT-016 — Planned:** renderer-only paint handoff (V8).
+- **Website parity:** the offline snapshot (`make vulkan-e2e`) passes with
+  `GONETSURF_VULKAN_NO_FALLBACK=1` at RMSE ~0.048 and ~1.4% differing pixels.
+  The opt-in live test (`make vulkan-e2e-live`) remains available for manual
+  network checks. No `calc()` fallback remains.
+
 ## Open Bugs
 
 _None yet._
@@ -818,8 +876,13 @@ _None yet. Add a row here with the blocking dependency when a task is `Blocked`.
   solid fills, paths/strokes (CPU coverage masks), gradients, images, glyphs,
   masks, blend-pixel groups, and opacity/masked layers through an offscreen GPU
   target with readback. Non-identity transformed layers fall back to software.
-  The X11 swapchain presenter and GPU path/gradient/glyph pipelines remain. See
-  [`rendering-refactor.md`](../rendering-refactor.md).
+  Glyphs are packed into a shared R8 atlas. Masked and unmasked gradients are
+  evaluated by a GPU fragment shader from a compact float data texture.
+  Paths/strokes use a compute coverage rasterizer, gradients and glyphs are
+  GPU-resident, layers render into GPU offscreen targets with group opacity,
+  masks, and transforms, node geometry is handed off through `GeometryHandle`,
+  and X11 presentation uses a Vulkan swapchain. All `P11-RENDER-006`–`012`
+  tasks are verified locally.
 - **Loading pipeline:** decoded images, stylesheet bodies, and font bytes are
   cached across frames; image/style/font subresources are prefetched
   concurrently. The network broker multiplexes requests and dispatches them

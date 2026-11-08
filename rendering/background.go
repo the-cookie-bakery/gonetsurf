@@ -1,12 +1,12 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/parsers/css/tokenizer"
 	"gonetsurf/styles"
@@ -372,8 +372,8 @@ func parseCSSPixelValue(text string) (float64, bool) {
 	return length.value, true
 }
 
-func (painter *Painter) paintBackground(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
-	if box.Style == nil || box.Kind == layouts.AnonymousBlockBox {
+func (painter *Painter) paintBackground(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+	if box.Style == nil || box.Kind == model.AnonymousBlockBox {
 		return
 	}
 	layers := parseBackgroundLayers(box.Style)
@@ -391,6 +391,13 @@ func (painter *Painter) paintBackground(box *layouts.Box, surface interfaces.Can
 		}
 		clipRect := boxAreaRect(box, clip, offsetX, offsetY, base)
 		clipRadii := insetRadii(radii, areaInsets(box, clip, base))
+		if painter.Geometry != nil && box.Node != nil {
+			if nodeCanvas, ok := surface.(interfaces.NodeCanvas); ok {
+				if index, found := painter.Geometry.NodeIndex(box.Node); found {
+					nodeCanvas.SetNodeIndex(index)
+				}
+			}
+		}
 		fillRoundedArea(surface, clipRect, clipRadii, color)
 	}
 	if painter == nil {
@@ -401,7 +408,7 @@ func (painter *Painter) paintBackground(box *layouts.Box, surface interfaces.Can
 	}
 }
 
-func (painter *Painter) paintBackgroundLayer(box *layouts.Box, surface interfaces.Canvas, layer backgroundLayerPaint, radii CornerRadii, offsetX, offsetY, base float64) {
+func (painter *Painter) paintBackgroundLayer(box *model.Box, surface interfaces.Canvas, layer backgroundLayerPaint, radii CornerRadii, offsetX, offsetY, base float64) {
 	if layer.image == "" && layer.gradient == nil {
 		return
 	}
@@ -585,7 +592,7 @@ func (painter *Painter) loadImage(resource string) *image.NRGBA {
 	return converted
 }
 
-func boxAreaRect(box *layouts.Box, area string, offsetX, offsetY, base float64) Rect {
+func boxAreaRect(box *model.Box, area string, offsetX, offsetY, base float64) Rect {
 	switch area {
 	case "content-box":
 		return Rect{X: box.ContentX + offsetX, Y: box.ContentY + offsetY, Width: box.ContentWidth, Height: box.ContentHeight}
@@ -609,7 +616,7 @@ type boxInsets struct {
 	Left   float64
 }
 
-func boxBorderInsets(box *layouts.Box, base float64) boxInsets {
+func boxBorderInsets(box *model.Box, base float64) boxInsets {
 	return boxInsets{
 		Top:    box.Border.Top.Resolve(base),
 		Right:  box.Border.Right.Resolve(base),
@@ -618,7 +625,7 @@ func boxBorderInsets(box *layouts.Box, base float64) boxInsets {
 	}
 }
 
-func boxPaddingInsets(box *layouts.Box, base float64) boxInsets {
+func boxPaddingInsets(box *model.Box, base float64) boxInsets {
 	return boxInsets{
 		Top:    box.Padding.Top.Resolve(base),
 		Right:  box.Padding.Right.Resolve(base),
@@ -627,7 +634,7 @@ func boxPaddingInsets(box *layouts.Box, base float64) boxInsets {
 	}
 }
 
-func areaInsets(box *layouts.Box, area string, base float64) boxInsets {
+func areaInsets(box *model.Box, area string, base float64) boxInsets {
 	border := boxBorderInsets(box, base)
 	if area == "padding-box" {
 		return border

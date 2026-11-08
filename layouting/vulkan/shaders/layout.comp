@@ -1,0 +1,2155 @@
+
+#version 450
+// Generated node field offsets.
+#define NODE_FIELD_COUNT 146
+#define F_PARENT 0
+#define F_FIRST 1
+#define F_COUNT 2
+#define F_NEXT 3
+#define F_KIND 4
+#define F_FLAGS 5
+#define F_DEPTH 6
+#define F_X 7
+#define F_Y 8
+#define F_W 9
+#define F_H 10
+#define F_CX 11
+#define F_CY 12
+#define F_CW 13
+#define F_CH 14
+#define F_SPEC_W 15
+#define F_SPEC_H 16
+#define F_MODE_W 17
+#define F_MODE_H 18
+#define F_MIN_W 19
+#define F_MAX_W 20
+#define F_MIN_H 21
+#define F_MAX_H 22
+#define F_MINW_MODE 23
+#define F_MAXW_MODE 24
+#define F_MINH_MODE 25
+#define F_MAXH_MODE 26
+#define F_MT 27
+#define F_MR 28
+#define F_MB 29
+#define F_ML 30
+#define F_MT_MODE 31
+#define F_MR_MODE 32
+#define F_MB_MODE 33
+#define F_ML_MODE 34
+#define F_PT 35
+#define F_PR 36
+#define F_PB 37
+#define F_PL 38
+#define F_PT_MODE 39
+#define F_PR_MODE 40
+#define F_PB_MODE 41
+#define F_PL_MODE 42
+#define F_BT 43
+#define F_BR 44
+#define F_BB 45
+#define F_BL 46
+#define F_FONT 47
+#define F_LINE 48
+#define F_ASCENT 49
+#define F_IMIN 50
+#define F_IMAX 51
+#define F_IHEIGHT 52
+#define F_TEXT_W 53
+#define F_WORD_W 54
+#define F_REPL_W 55
+#define F_REPL_H 56
+#define F_REPL_FLAGS 57
+#define F_ASPECT 58
+#define F_FLEX_GROW 59
+#define F_FLEX_SHRINK 60
+#define F_FLEX_BASIS 61
+#define F_ORDER 62
+#define F_SCROLL_W 63
+#define F_SCROLL_H 64
+#define F_FLAGS2 65
+#define F_DIRTY 66
+#define F_ZINDEX 67
+#define F_FLEX_DIR 68
+#define F_FLEX_WRAP 69
+#define F_FLEX_JUSTIFY 70
+#define F_FLEX_GAP 71
+#define F_FLEX_BASIS_MODE 72
+#define F_FLEX_ALIGN 73
+#define F_GRID_COL_START 74
+#define F_GRID_COL_SPAN 75
+#define F_GRID_ROW_START 76
+#define F_GRID_ROW_SPAN 77
+#define F_GRID_EXPLICIT 78
+#define F_GRID_ORDER 79
+#define F_COL_TRACK_START 80
+#define F_COL_TRACK_COUNT 81
+#define F_ROW_TRACK_START 82
+#define F_ROW_TRACK_COUNT 83
+#define F_COL_GAP 84
+#define F_ROW_GAP 85
+#define F_GRID_JUSTIFY 86
+#define F_GRID_ALIGN 87
+#define F_GRID_JUSTIFY_SELF 88
+#define F_GRID_ALIGN_SELF 89
+#define F_GRID_SCRATCH_START 90
+#define F_GRID_MAX_ROWS 91
+#define F_GRID_MAX_COLS 92
+#define F_TABLE_ROW 93
+#define F_TABLE_COL 94
+#define F_TABLE_COL_SPAN 95
+#define F_TABLE_ROW_SPAN 96
+#define F_TABLE_COLLAPSE 97
+#define F_TABLE_SCRATCH_START 98
+#define F_TABLE_MAX_ROWS 99
+#define F_TABLE_MAX_COLS 100
+#define F_FLOAT_SIDE 101
+#define F_CLEAR 102
+#define F_POSITION_KIND 103
+#define F_LEFT 104
+#define F_RIGHT 105
+#define F_TOP 106
+#define F_BOTTOM 107
+#define F_LEFT_MODE 108
+#define F_RIGHT_MODE 109
+#define F_TOP_MODE 110
+#define F_BOTTOM_MODE 111
+#define F_STATIC_X 112
+#define F_STATIC_Y 113
+#define F_HAS_STATIC 114
+#define F_WRITING_MODE 115
+#define F_AUX_START 116
+#define F_AUX_COUNT 117
+#define F_GRID_PLACED_COL 118
+#define F_GRID_PLACED_ROW 119
+#define F_REL_DX 120
+#define F_REL_DY 121
+#define F_TEXT_ALIGN 122
+#define F_VERTICAL_ALIGN 123
+#define F_SCROLL_FLAGS 124
+#define F_FLAGS3 125
+#define F_SPEC_W_OFFSET 126
+#define F_SPEC_H_OFFSET 127
+#define F_COLLAPSE_TOP 128
+#define F_MIN_W_OFFSET 129
+#define F_MAX_W_OFFSET 130
+#define F_MIN_H_OFFSET 131
+#define F_MAX_H_OFFSET 132
+#define F_FLEX_BASIS_OFFSET 133
+#define F_LEFT_OFFSET 134
+#define F_RIGHT_OFFSET 135
+#define F_TOP_OFFSET 136
+#define F_BOTTOM_OFFSET 137
+#define F_SCROLL_LEFT 138
+#define F_SCROLL_TOP 139
+#define F_SUBTREE_SIZE 140
+#define F_ORIG_MB 141
+#define F_SPACE_BEFORE 142
+#define F_FORCE_BREAK 143
+#define F_PARENT_SIZED_W 144
+#define F_ATOMIC_INLINE 145
+#define F_FIELD_COUNT 146
+#define FLAG_BLOCK_CONTAINER 1
+#define FLAG_INLINE_CONTAINER 2
+#define FLAG_BLOCK_FORMATTING_CONTEXT 4
+#define FLAG_OUT_OF_FLOW 8
+#define FLAG_FLOAT 16
+#define FLAG_REPLACED 32
+#define FLAG_VERTICAL 64
+#define FLAG_BORDER_BOX 128
+#define FLAG_COLLAPSED_FIRST 256
+#define FLAG_BLOCK_FORMATTING 512
+#define FLAG_FLEX_CONTAINER 1024
+#define FLAG_FLEX_COLUMN 2048
+#define FLAG_FLEX_WRAP 4096
+#define FLAG_FLEX_REVERSE 8192
+#define FLAG_GRID_CONTAINER 16384
+#define FLAG_TABLE_CONTAINER 32768
+#define FLAG_TABLE_ROW 65536
+#define FLAG_TABLE_CELL 131072
+#define FLAG_FLOAT_LEFT 262144
+#define FLAG_FLOAT_RIGHT 524288
+#define FLAG_ABSOLUTE 1048576
+#define FLAG_FIXED 2097152
+#define FLAG_RELATIVE 4194304
+#define FLAG_VERTICAL_R_L 8388608
+#define FLAG_VERTICAL_L_R 16777216
+#define FLAG_TABLE_ROW_GROUP 33554432
+#define FLAG_OVERFLOW_X 67108864
+#define FLAG_OVERFLOW_Y 134217728
+#define FLAG_CLIP_X 268435456
+#define FLAG_CLIP_Y 536870912
+#define FLAG_NO_WRAP 1073741824
+
+layout(local_size_x = 64) in;
+
+layout(std430, binding = 0) buffer Nodes {
+    float nodes[];
+};
+
+layout(std430, binding = 1) buffer Auxiliary {
+    float aux[];
+};
+
+layout(push_constant) uniform PushConstants {
+    int mode;
+    int target;
+    int count;
+    int padding;
+    float viewWidth;
+    float viewHeight;
+    int queryNode;
+    float queryX;
+    float queryY;
+    float scrollX;
+    float scrollY;
+} push;
+
+float nodeValue(int index, int field) {
+    return nodes[index * NODE_FIELD_COUNT + field];
+}
+
+void setNodeValue(int index, int field, float value) {
+    nodes[index * NODE_FIELD_COUNT + field] = value;
+}
+
+int nodeInt(int index, int field) {
+    return int(round(nodeValue(index, field)));
+}
+
+int nodeFlags(int index) {
+    return int(nodes[index * NODE_FIELD_COUNT + F_FLAGS2]) +
+        int(nodes[index * NODE_FIELD_COUNT + F_FLAGS3]) * 65536;
+}
+
+float nonNegative(float value) {
+    return value < 0.0 ? 0.0 : value;
+}
+
+float collapseMargin(float first, float second) {
+    float positive = max(max(first, second), 0.0);
+    float negative = min(min(first, second), 0.0);
+    return positive + negative;
+}
+
+float inlineLineWidthFrom(int first, float contentWidth, bool wrap) {
+    float width = 0.0;
+    bool firstRun = true;
+    int child = first;
+    while (child >= 0) {
+        if ((nodeFlags(child) & FLAG_OUT_OF_FLOW) != 0) {
+            child = nodeInt(child, F_NEXT);
+            continue;
+        }
+        if (nodeValue(child, F_FORCE_BREAK) > 0.5) {
+            break;
+        }
+        float space = (!firstRun && nodeValue(child, F_SPACE_BEFORE) > 0.5) ?
+            nodeValue(child, F_FONT) * 0.25 : 0.0;
+        float advance = nodeValue(child, F_ML) + nodeValue(child, F_W) + nodeValue(child, F_MR);
+        if (wrap && !firstRun && width + space + advance > contentWidth + 6.0) {
+            break;
+        }
+        width += space + advance;
+        firstRun = false;
+        child = nodeInt(child, F_NEXT);
+    }
+    return width;
+}
+
+float inlineAlignOffset(int textAlign, float contentWidth, float lineWidth) {
+    float remaining = contentWidth - lineWidth;
+    if (remaining <= 0.0) {
+        return 0.0;
+    }
+    if (textAlign == 1) {
+        return remaining * 0.5;
+    }
+    if (textAlign == 2) {
+        return remaining;
+    }
+    return 0.0;
+}
+
+
+bool tableRowNode(int node) {
+    return (nodeFlags(node) & FLAG_TABLE_ROW) != 0;
+}
+
+bool tableGroupNode(int node) {
+    return (nodeFlags(node) & FLAG_TABLE_ROW_GROUP) != 0;
+}
+
+bool tableCellNode(int node) {
+    return (nodeFlags(node) & FLAG_TABLE_CELL) != 0;
+}
+
+bool parentFlexOrGrid(int node) {
+    int parent = nodeInt(node, F_PARENT);
+    if (parent < 0) {
+        return false;
+    }
+    return (nodeFlags(parent) & (FLAG_FLEX_CONTAINER | FLAG_GRID_CONTAINER)) != 0;
+}
+
+float flexBase(int child, bool column, float mainSize) {
+    int mode = nodeInt(child, F_FLEX_BASIS_MODE);
+    float value = nodeValue(child, F_FLEX_BASIS);
+    if (mode == 1) {
+        return value;
+    }
+    if (mode == 2) {
+        return mainSize * value * 0.01 + nodeValue(child, F_FLEX_BASIS_OFFSET);
+    }
+    if (column) {
+        int heightMode = nodeInt(child, F_MODE_H);
+        if (heightMode == 1) {
+            return nodeValue(child, F_SPEC_H);
+        }
+        if (heightMode == 2) {
+            return nodeValue(child, F_CH) * nodeValue(child, F_SPEC_H) * 0.01 + nodeValue(child, F_SPEC_H_OFFSET);
+        }
+        return 0.0;
+    }
+    int widthMode = nodeInt(child, F_MODE_W);
+    if (widthMode == 1) {
+        return nodeValue(child, F_SPEC_W);
+    }
+    if (widthMode == 2) {
+        return mainSize * nodeValue(child, F_SPEC_W) * 0.01 + nodeValue(child, F_SPEC_W_OFFSET);
+    }
+    return nodeValue(child, F_IMAX);
+}
+
+float resolveLength(int index, int modeField, int valueField, float base) {
+    int mode = nodeInt(index, modeField);
+    float value = nodeValue(index, valueField);
+    if (mode == 1) {
+        return base * value * 0.01;
+    }
+    if (mode == 2) {
+        return 0.0;
+    }
+    return value;
+}
+
+
+void shiftSubtree(int root, float deltaX, float deltaY) {
+    int last = root + max(0, nodeInt(root, F_SUBTREE_SIZE));
+    for (int node = root + 1; node < last; node++) {
+        setNodeValue(node, F_X, nodeValue(node, F_X) + deltaX);
+        setNodeValue(node, F_Y, nodeValue(node, F_Y) + deltaY);
+        setNodeValue(node, F_CX, nodeValue(node, F_CX) + deltaX);
+        setNodeValue(node, F_CY, nodeValue(node, F_CY) + deltaY);
+    }
+}
+
+void main() {
+    int index = int(gl_GlobalInvocationID.x);
+    if (push.padding >= 0) {
+        if (index >= push.count) {
+            return;
+        }
+        index = int(aux[push.padding + index]);
+    } else if (index >= push.count) {
+        return;
+    }
+    if (nodeInt(index, F_DEPTH) != push.target) {
+        return;
+    }
+    if (push.mode == 0) {
+        int kind = nodeInt(index, F_KIND);
+        int flags = nodeInt(index, F_FLAGS);
+        float intrinsicMin = 0.0;
+        float intrinsicMax = 0.0;
+        float intrinsicHeight = 0.0;
+        if (kind == 2) {
+            intrinsicMin = nodeValue(index, F_WORD_W);
+            intrinsicMax = nodeValue(index, F_TEXT_W);
+            intrinsicHeight = nodeValue(index, F_LINE);
+        } else if ((flags & FLAG_REPLACED) != 0) {
+            intrinsicMin = nodeValue(index, F_REPL_W);
+            intrinsicMax = intrinsicMin;
+            intrinsicHeight = nodeValue(index, F_REPL_H);
+        } else {
+            bool inlineContainer = (nodeFlags(index) & FLAG_INLINE_CONTAINER) != 0;
+            int child = nodeInt(index, F_FIRST);
+            float totalHeight = 0.0;
+            float maximumHeight = 0.0;
+            while (child >= 0) {
+                float childMin = nodeValue(child, F_IMIN);
+                float childMax = nodeValue(child, F_IMAX);
+                if (childMin > intrinsicMin) {
+                    intrinsicMin = childMin;
+                }
+                if (inlineContainer) {
+                    if (nodeValue(child, F_SPACE_BEFORE) > 0.5) {
+                        intrinsicMax += nodeValue(child, F_FONT) * 0.25;
+                    }
+                    intrinsicMax += childMax + nodeValue(child, F_ML) + nodeValue(child, F_MR);
+                } else if (childMax > intrinsicMax) {
+                    intrinsicMax = childMax;
+                }
+                float childHeight = nodeValue(child, F_IHEIGHT) +
+                    nodeValue(child, F_MT) + nodeValue(child, F_MB) +
+                    nodeValue(child, F_PT) + nodeValue(child, F_PB) +
+                    nodeValue(child, F_BT) + nodeValue(child, F_BB);
+                totalHeight += childHeight;
+                if (childHeight > maximumHeight) {
+                    maximumHeight = childHeight;
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            intrinsicHeight = inlineContainer ? maximumHeight : totalHeight;
+        }
+        int widthMode = nodeInt(index, F_MODE_W);
+        float specifiedWidth = nodeValue(index, F_SPEC_W);
+        if (widthMode == 1) {
+            intrinsicMin = specifiedWidth;
+            intrinsicMax = specifiedWidth;
+        } else if (widthMode == 2) {
+            intrinsicMin = specifiedWidth;
+            intrinsicMax = specifiedWidth;
+        }
+        setNodeValue(index, F_IMIN, intrinsicMin);
+        setNodeValue(index, F_IMAX, intrinsicMax);
+        setNodeValue(index, F_IHEIGHT, intrinsicHeight);
+        return;
+    }
+
+    if (push.mode == 5) {
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_BLOCK_CONTAINER) == 0) {
+            setNodeValue(index, F_COLLAPSE_TOP, nodeValue(index, F_MT));
+            return;
+        }
+        float rawTop = nodeValue(index, F_MT);
+        float top = rawTop;
+        int firstChild = nodeInt(index, F_FIRST);
+        if (!parentFlexOrGrid(index) && (flags & FLAG_BLOCK_FORMATTING) == 0 && firstChild >= 0 &&
+            nodeValue(index, F_BT) + nodeValue(index, F_PT) == 0.0) {
+            int childKind = nodeInt(firstChild, F_KIND);
+            if (childKind == 0) {
+                float childTop = nodeValue(firstChild, F_MT);
+                float collapsed = collapseMargin(rawTop, childTop);
+                if (collapsed != top) {
+                    top = collapsed;
+                    setNodeValue(index, F_FLAGS2, float(flags | FLAG_COLLAPSED_FIRST));
+                }
+            }
+        }
+        setNodeValue(index, F_COLLAPSE_TOP, top);
+        return;
+    }
+
+
+    if (push.mode == 6) {
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_GRID_CONTAINER) == 0) {
+            return;
+        }
+        int maxColumns = int(nodeValue(index, F_GRID_MAX_COLS));
+        int maxRows = int(nodeValue(index, F_GRID_MAX_ROWS));
+        int scratch = int(nodeValue(index, F_GRID_SCRATCH_START));
+        int columnBase = scratch;
+        int rowBase = scratch + maxColumns;
+        int occupancyBase = scratch + maxColumns + maxRows;
+        int columnTrackStart = int(nodeValue(index, F_COL_TRACK_START));
+        int columnTrackCount = int(nodeValue(index, F_COL_TRACK_COUNT));
+        int rowTrackStart = int(nodeValue(index, F_ROW_TRACK_START));
+        int rowTrackCount = int(nodeValue(index, F_ROW_TRACK_COUNT));
+        float columnGap = nodeValue(index, F_COL_GAP);
+        float rowGap = nodeValue(index, F_ROW_GAP);
+        int columnCount = max(columnTrackCount, 1);
+        int rowCount = max(rowTrackCount, 1);
+
+        for (int cell = 0; cell < maxColumns * maxRows; cell++) {
+            aux[occupancyBase + cell] = 0.0;
+        }
+        int total = 0;
+        int child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            setNodeValue(child, F_DIRTY, 0.0);
+            total++;
+            child = nodeInt(child, F_NEXT);
+        }
+
+        int placed = 0;
+        while (placed < total) {
+            int best = -1;
+            float bestExplicit = -1.0;
+            float bestOrder = 0.0;
+            child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                if (nodeInt(child, F_DIRTY) == 0) {
+                    float explicit = nodeValue(child, F_GRID_EXPLICIT);
+                    float order = nodeValue(child, F_GRID_ORDER);
+                    bool better = best < 0;
+                    if (!better && explicit > bestExplicit) {
+                        better = true;
+                    } else if (!better && explicit == bestExplicit) {
+                        if (order < bestOrder || (order == bestOrder && child < best)) {
+                            better = true;
+                        }
+                    }
+                    if (better) {
+                        best = child;
+                        bestExplicit = explicit;
+                        bestOrder = order;
+                    }
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            if (best < 0) {
+                break;
+            }
+            setNodeValue(best, F_DIRTY, 1.0);
+            int columnSpan = max(1, int(nodeValue(best, F_GRID_COL_SPAN)));
+            int rowSpan = max(1, int(nodeValue(best, F_GRID_ROW_SPAN)));
+            int column = 0;
+            int row = 0;
+            if (bestExplicit > 0.5) {
+                int start = int(nodeValue(best, F_GRID_COL_START));
+                if (start > 0) {
+                    column = start - 1;
+                }
+                start = int(nodeValue(best, F_GRID_ROW_START));
+                if (start > 0) {
+                    row = start - 1;
+                }
+                column = max(column, 0);
+                row = max(row, 0);
+            } else {
+                while (true) {
+                    if (column + columnSpan > columnCount) {
+                        row++;
+                        column = 0;
+                        continue;
+                    }
+                    bool free = true;
+                    for (int rr = row; rr < row + rowSpan; rr++) {
+                        for (int cc = column; cc < column + columnSpan; cc++) {
+                            if (rr < maxRows && cc < maxColumns && aux[occupancyBase + rr * maxColumns + cc] > 0.5) {
+                                free = false;
+                            }
+                        }
+                    }
+                    if (free) {
+                        break;
+                    }
+                    column++;
+                }
+            }
+            columnCount = max(columnCount, column + columnSpan);
+            rowCount = max(rowCount, row + rowSpan);
+            for (int rr = row; rr < row + rowSpan; rr++) {
+                for (int cc = column; cc < column + columnSpan; cc++) {
+                    if (rr < maxRows && cc < maxColumns) {
+                        aux[occupancyBase + rr * maxColumns + cc] = 1.0;
+                    }
+                }
+            }
+            setNodeValue(best, F_GRID_PLACED_COL, float(column));
+            setNodeValue(best, F_GRID_PLACED_ROW, float(row));
+            placed++;
+        }
+
+        for (int column = 0; column < maxColumns; column++) {
+            aux[columnBase + column] = 0.0;
+        }
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int column = int(nodeValue(child, F_GRID_PLACED_COL));
+            int span = max(1, int(nodeValue(child, F_GRID_COL_SPAN)));
+            if (span <= 1 && column >= 0 && column < maxColumns) {
+                float extra = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                    nodeValue(child, F_BL) + nodeValue(child, F_BR) +
+                    nodeValue(child, F_ML) + nodeValue(child, F_MR);
+                float width = nodeValue(child, F_IMAX) + extra;
+                if (width > aux[columnBase + column]) {
+                    aux[columnBase + column] = width;
+                }
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+        float fixedColumns = 0.0;
+        float flexColumns = 0.0;
+        int autoColumns = 0;
+        for (int column = 0; column < columnCount; column++) {
+            float kind = 3.0;
+            float value = 0.0;
+            float flex = 0.0;
+            float minimum = 0.0;
+            if (column < columnTrackCount) {
+                int base = columnTrackStart + column * 8;
+                kind = aux[base];
+                value = aux[base + 1];
+                flex = aux[base + 2];
+                minimum = aux[base + 3];
+            }
+            if (kind > 2.5) {
+                autoColumns++;
+            } else if (kind > 1.5) {
+                flexColumns += flex;
+            } else {
+                float width = kind > 0.5 ? nodeValue(index, F_CW) * value * 0.01 : value;
+                width = max(width, minimum);
+                aux[columnBase + column] = width;
+                fixedColumns += width;
+            }
+        }
+        float columnFree = nodeValue(index, F_CW) - fixedColumns - columnGap * float(columnCount - 1);
+        if (columnFree < 0.0) {
+            columnFree = 0.0;
+        }
+        if (flexColumns > 0.0) {
+            for (int column = 0; column < columnCount; column++) {
+                float kind = column < columnTrackCount ? aux[columnTrackStart + column * 8] : 3.0;
+                if (kind > 1.5 && kind < 2.5) {
+                    int base = columnTrackStart + column * 8;
+                    float width = max(aux[base + 3], columnFree * aux[base + 2] / flexColumns);
+                    aux[columnBase + column] = width;
+                }
+            }
+        } else if (autoColumns > 0) {
+            for (int column = 0; column < columnCount; column++) {
+                float kind = column < columnTrackCount ? aux[columnTrackStart + column * 8] : 3.0;
+                if (kind > 2.5) {
+                    float width = aux[columnBase + column];
+                    if (width <= 0.0) {
+                        width = columnFree / float(autoColumns);
+                    }
+                    aux[columnBase + column] = width;
+                }
+            }
+        }
+
+        for (int row = 0; row < maxRows; row++) {
+            aux[rowBase + row] = 0.0;
+        }
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int row = int(nodeValue(child, F_GRID_PLACED_ROW));
+            int span = max(1, int(nodeValue(child, F_GRID_ROW_SPAN)));
+            if (span <= 1 && row >= 0 && row < maxRows) {
+                if (nodeValue(child, F_H) > aux[rowBase + row]) {
+                    aux[rowBase + row] = nodeValue(child, F_H);
+                }
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+        float fixedRows = 0.0;
+        float flexRows = 0.0;
+        int autoRows = 0;
+        for (int row = 0; row < rowCount; row++) {
+            float kind = 3.0;
+            float value = 0.0;
+            float flex = 0.0;
+            float minimum = 0.0;
+            if (row < rowTrackCount) {
+                int base = rowTrackStart + row * 8;
+                kind = aux[base];
+                value = aux[base + 1];
+                flex = aux[base + 2];
+                minimum = aux[base + 3];
+            }
+            if (kind > 2.5) {
+                autoRows++;
+            } else if (kind > 1.5) {
+                flexRows += flex;
+            } else {
+                float height = kind > 0.5 ? nodeValue(index, F_CH) * value * 0.01 : value;
+                height = max(height, minimum);
+                aux[rowBase + row] = height;
+                fixedRows += height;
+            }
+        }
+        float rowFree = nodeValue(index, F_CH) - fixedRows - rowGap * float(rowCount - 1);
+        if (rowFree < 0.0) {
+            rowFree = 0.0;
+        }
+        if (flexRows > 0.0) {
+            for (int row = 0; row < rowCount; row++) {
+                float kind = row < rowTrackCount ? aux[rowTrackStart + row * 8] : 3.0;
+                if (kind > 1.5 && kind < 2.5) {
+                    int base = rowTrackStart + row * 8;
+                    float height = max(aux[base + 3], rowFree * aux[base + 2] / flexRows);
+                    aux[rowBase + row] = height;
+                }
+            }
+        } else if (autoRows > 0) {
+            for (int row = 0; row < rowCount; row++) {
+                float kind = row < rowTrackCount ? aux[rowTrackStart + row * 8] : 3.0;
+                if (kind > 2.5) {
+                    float height = aux[rowBase + row];
+                    if (height <= 0.0) {
+                        height = rowFree / float(autoRows);
+                    }
+                    aux[rowBase + row] = height;
+                }
+            }
+        }
+
+        int containerJustify = int(nodeValue(index, F_GRID_JUSTIFY));
+        int containerAlign = int(nodeValue(index, F_GRID_ALIGN));
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int column = int(nodeValue(child, F_GRID_PLACED_COL));
+            int row = int(nodeValue(child, F_GRID_PLACED_ROW));
+            int columnSpan = max(1, int(nodeValue(child, F_GRID_COL_SPAN)));
+            int rowSpan = max(1, int(nodeValue(child, F_GRID_ROW_SPAN)));
+            float offsetX = 0.0;
+            for (int current = 0; current < column && current < columnCount; current++) {
+                offsetX += aux[columnBase + current] + columnGap;
+            }
+            float offsetY = 0.0;
+            for (int current = 0; current < row && current < rowCount; current++) {
+                offsetY += aux[rowBase + current] + rowGap;
+            }
+            float trackWidth = columnGap * float(columnSpan - 1);
+            for (int current = 0; current < columnSpan && column + current < columnCount; current++) {
+                trackWidth += aux[columnBase + column + current];
+            }
+            float trackHeight = rowGap * float(rowSpan - 1);
+            for (int current = 0; current < rowSpan && row + current < rowCount; current++) {
+                trackHeight += aux[rowBase + row + current];
+            }
+            int justify = int(nodeValue(child, F_GRID_JUSTIFY_SELF));
+            if (justify == 0) {
+                justify = containerJustify;
+            }
+            int align = int(nodeValue(child, F_GRID_ALIGN_SELF));
+            if (align == 0) {
+                align = containerAlign;
+            }
+            float extraX = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                nodeValue(child, F_BL) + nodeValue(child, F_BR);
+            float extraY = nodeValue(child, F_PT) + nodeValue(child, F_PB) +
+                nodeValue(child, F_BT) + nodeValue(child, F_BB);
+            float itemWidth = trackWidth;
+            if (justify != 3) {
+                float desired = nodeValue(child, F_W);
+                if (desired > 0.0) {
+                    itemWidth = min(trackWidth, desired);
+                }
+            }
+            float itemX = nodeValue(index, F_CX) + offsetX;
+            if (justify == 1) {
+                itemX += (trackWidth - itemWidth) * 0.5;
+            } else if (justify == 2) {
+                itemX += trackWidth - itemWidth;
+            }
+            float itemHeight = nodeValue(child, F_H);
+            float itemY = nodeValue(index, F_CY) + offsetY;
+            if (align == 1) {
+                itemY += (trackHeight - itemHeight) * 0.5;
+            } else if (align == 2) {
+                itemY += trackHeight - itemHeight;
+            } else if (align == 3 && nodeInt(child, F_MODE_H) == 0) {
+                itemHeight = trackHeight;
+                setNodeValue(child, F_H, itemHeight);
+                setNodeValue(child, F_CH, nonNegative(itemHeight - extraY));
+            }
+            setNodeValue(child, F_X, itemX);
+            setNodeValue(child, F_CX, itemX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+            setNodeValue(child, F_W, itemWidth + extraX);
+            setNodeValue(child, F_CW, nonNegative(itemWidth));
+            setNodeValue(child, F_PARENT_SIZED_W, 1.0);
+            setNodeValue(child, F_Y, itemY);
+            setNodeValue(child, F_CY, itemY + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+            child = nodeInt(child, F_NEXT);
+        }
+
+        if (nodeInt(index, F_MODE_H) == 0) {
+            float totalHeight = rowGap * float(rowCount - 1);
+            for (int row = 0; row < rowCount; row++) {
+                totalHeight += aux[rowBase + row];
+            }
+            float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) +
+                nodeValue(index, F_BT) + nodeValue(index, F_BB);
+            setNodeValue(index, F_CH, nonNegative(totalHeight));
+            setNodeValue(index, F_H, nonNegative(totalHeight) + verticalExtra);
+        }
+        return;
+    }
+
+
+    if (push.mode == 8) {
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_TABLE_CONTAINER) == 0) {
+            return;
+        }
+        int maxColumns = max(1, int(nodeValue(index, F_TABLE_MAX_COLS)));
+        int maxRows = max(1, int(nodeValue(index, F_TABLE_MAX_ROWS)));
+        int scratch = int(nodeValue(index, F_TABLE_SCRATCH_START));
+        int columnMinBase = scratch;
+        int columnMaxBase = scratch + maxColumns;
+        int rowBase = scratch + 2 * maxColumns;
+        int occupancyBase = rowBase + maxRows;
+        bool collapse = nodeValue(index, F_TABLE_COLLAPSE) > 0.5;
+        float borderScale = collapse ? 0.5 : 1.0;
+
+        for (int cell = 0; cell < maxColumns * maxRows; cell++) {
+            aux[occupancyBase + cell] = 0.0;
+        }
+        int child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int cell = nodeInt(child, F_FIRST);
+            while (cell >= 0) {
+                setNodeValue(cell, F_DIRTY, 0.0);
+                cell = nodeInt(cell, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        int rowIndex = 0;
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                setNodeValue(rowChild, F_TABLE_ROW, float(rowIndex));
+                int column = 0;
+                int cell = nodeInt(rowChild, F_FIRST);
+                while (cell >= 0) {
+                    if (!tableCellNode(cell)) {
+                        cell = nodeInt(cell, F_NEXT);
+                        continue;
+                    }
+                    int columnSpan = max(1, int(nodeValue(cell, F_TABLE_COL_SPAN)));
+                    int rowSpan = max(1, int(nodeValue(cell, F_TABLE_ROW_SPAN)));
+                    while (column < maxColumns && aux[occupancyBase + rowIndex * maxColumns + column] > 0.5) {
+                        column++;
+                    }
+                    if (column >= maxColumns) {
+                        column = maxColumns - 1;
+                    }
+                    if (column + columnSpan > maxColumns) {
+                        columnSpan = max(1, maxColumns - column);
+                    }
+                    for (int rr = rowIndex; rr < rowIndex + rowSpan; rr++) {
+                        for (int cc = column; cc < column + columnSpan; cc++) {
+                            if (rr < maxRows && cc < maxColumns) {
+                                aux[occupancyBase + rr * maxColumns + cc] = 1.0;
+                            }
+                        }
+                    }
+                    setNodeValue(cell, F_GRID_PLACED_COL, float(column));
+                    setNodeValue(cell, F_GRID_PLACED_ROW, float(rowIndex));
+                    column += columnSpan;
+                    cell = nodeInt(cell, F_NEXT);
+                }
+                rowIndex++;
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+        int rowCount = max(rowIndex, 1);
+
+        for (int column = 0; column < maxColumns; column++) {
+            aux[columnMinBase + column] = 0.0;
+            aux[columnMaxBase + column] = 0.0;
+        }
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                int cell = nodeInt(rowChild, F_FIRST);
+                while (cell >= 0) {
+                    if (!tableCellNode(cell)) {
+                        cell = nodeInt(cell, F_NEXT);
+                        continue;
+                    }
+                    int column = int(nodeValue(cell, F_GRID_PLACED_COL));
+                    int columnSpan = max(1, int(nodeValue(cell, F_TABLE_COL_SPAN)));
+                    float horizontalExtra = nodeValue(cell, F_PL) + nodeValue(cell, F_PR) +
+                        nodeValue(cell, F_ML) + nodeValue(cell, F_MR) +
+                        borderScale * (nodeValue(cell, F_BL) + nodeValue(cell, F_BR));
+                    float minimum = nodeValue(cell, F_IMIN) + horizontalExtra;
+                    float maximum = nodeValue(cell, F_IMAX) + horizontalExtra;
+                    if (columnSpan <= 1) {
+                        if (column >= 0 && column < maxColumns) {
+                            if (minimum > aux[columnMinBase + column]) {
+                                aux[columnMinBase + column] = minimum;
+                            }
+                            if (maximum > aux[columnMaxBase + column]) {
+                                aux[columnMaxBase + column] = maximum;
+                            }
+                        }
+                    } else {
+                        float sumMin = 0.0;
+                        float sumMax = 0.0;
+                        for (int cc = column; cc < column + columnSpan && cc < maxColumns; cc++) {
+                            sumMin += aux[columnMinBase + cc];
+                            sumMax += aux[columnMaxBase + cc];
+                        }
+                        if (minimum > sumMin) {
+                            float extra = (minimum - sumMin) / float(columnSpan);
+                            for (int cc = column; cc < column + columnSpan && cc < maxColumns; cc++) {
+                                aux[columnMinBase + cc] += extra;
+                            }
+                        }
+                        if (maximum > sumMax) {
+                            float extra = (maximum - sumMax) / float(columnSpan);
+                            for (int cc = column; cc < column + columnSpan && cc < maxColumns; cc++) {
+                                aux[columnMaxBase + cc] += extra;
+                            }
+                        }
+                    }
+                    cell = nodeInt(cell, F_NEXT);
+                }
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        float totalMin = 0.0;
+        float totalMax = 0.0;
+        for (int column = 0; column < maxColumns; column++) {
+            if (aux[columnMaxBase + column] < aux[columnMinBase + column]) {
+                aux[columnMaxBase + column] = aux[columnMinBase + column];
+            }
+            totalMin += aux[columnMinBase + column];
+            totalMax += aux[columnMaxBase + column];
+        }
+        float tableWidth = nodeValue(index, F_CW);
+        if (nodeInt(index, F_MODE_W) == 0) {
+            tableWidth = totalMax;
+            float horizontalExtra = nodeValue(index, F_PL) + nodeValue(index, F_PR) +
+                nodeValue(index, F_BL) + nodeValue(index, F_BR);
+            setNodeValue(index, F_CW, tableWidth);
+            setNodeValue(index, F_W, tableWidth + horizontalExtra);
+        }
+        for (int column = 0; column < maxColumns; column++) {
+            float minimum = aux[columnMinBase + column];
+            float maximum = aux[columnMaxBase + column];
+            float width = 0.0;
+            if (totalMax <= 0.0) {
+                width = tableWidth / float(maxColumns);
+            } else if (tableWidth >= totalMax) {
+                width = maximum + (tableWidth - totalMax) * maximum / totalMax;
+            } else if (tableWidth <= totalMin) {
+                width = totalMin > 0.0 ? minimum * tableWidth / totalMin : 0.0;
+            } else {
+                float delta = totalMax - totalMin;
+                width = delta > 0.0 ? minimum + (maximum - minimum) * (tableWidth - totalMin) / delta : minimum;
+            }
+            aux[columnMinBase + column] = width;
+        }
+
+        for (int row = 0; row < maxRows; row++) {
+            aux[rowBase + row] = 0.0;
+        }
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                int row = int(nodeValue(rowChild, F_TABLE_ROW));
+                int cell = nodeInt(rowChild, F_FIRST);
+                while (cell >= 0) {
+                    if (!tableCellNode(cell)) {
+                        cell = nodeInt(cell, F_NEXT);
+                        continue;
+                    }
+                    int rowSpan = max(1, int(nodeValue(cell, F_TABLE_ROW_SPAN)));
+                    if (rowSpan <= 1 && row >= 0 && row < maxRows) {
+                        if (nodeValue(cell, F_H) > aux[rowBase + row]) {
+                            aux[rowBase + row] = nodeValue(cell, F_H);
+                        }
+                    }
+                    cell = nodeInt(cell, F_NEXT);
+                }
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                int cell = nodeInt(rowChild, F_FIRST);
+                while (cell >= 0) {
+                    if (!tableCellNode(cell)) {
+                        cell = nodeInt(cell, F_NEXT);
+                        continue;
+                    }
+                    int row = int(nodeValue(cell, F_GRID_PLACED_ROW));
+                    int rowSpan = max(1, int(nodeValue(cell, F_TABLE_ROW_SPAN)));
+                    if (rowSpan > 1) {
+                        float spanned = 0.0;
+                        for (int rr = row; rr < row + rowSpan && rr < maxRows; rr++) {
+                            spanned += aux[rowBase + rr];
+                        }
+                        if (nodeValue(cell, F_H) > spanned && row + rowSpan - 1 < maxRows) {
+                            aux[rowBase + row + rowSpan - 1] += nodeValue(cell, F_H) - spanned;
+                        }
+                    }
+                    cell = nodeInt(cell, F_NEXT);
+                }
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                int cell = nodeInt(rowChild, F_FIRST);
+                while (cell >= 0) {
+                    if (!tableCellNode(cell)) {
+                        cell = nodeInt(cell, F_NEXT);
+                        continue;
+                    }
+                    int column = int(nodeValue(cell, F_GRID_PLACED_COL));
+                    int row = int(nodeValue(cell, F_GRID_PLACED_ROW));
+                    int columnSpan = max(1, int(nodeValue(cell, F_TABLE_COL_SPAN)));
+                    int rowSpan = max(1, int(nodeValue(cell, F_TABLE_ROW_SPAN)));
+                    float cellX = nodeValue(index, F_CX);
+                    for (int cc = 0; cc < column && cc < maxColumns; cc++) {
+                        cellX += aux[columnMinBase + cc];
+                    }
+                    float cellWidth = 0.0;
+                    for (int cc = column; cc < column + columnSpan && cc < maxColumns; cc++) {
+                        cellWidth += aux[columnMinBase + cc];
+                    }
+                    float cellY = nodeValue(index, F_CY);
+                    for (int rr = 0; rr < row && rr < maxRows; rr++) {
+                        cellY += aux[rowBase + rr];
+                    }
+                    float cellHeight = 0.0;
+                    for (int rr = row; rr < row + rowSpan && rr < maxRows; rr++) {
+                        cellHeight += aux[rowBase + rr];
+                    }
+                    float horizontalExtra = nodeValue(cell, F_PL) + nodeValue(cell, F_PR) +
+                        nodeValue(cell, F_ML) + nodeValue(cell, F_MR) +
+                        borderScale * (nodeValue(cell, F_BL) + nodeValue(cell, F_BR));
+                    float verticalExtra = nodeValue(cell, F_PT) + nodeValue(cell, F_PB) +
+                        borderScale * (nodeValue(cell, F_BT) + nodeValue(cell, F_BB));
+                    setNodeValue(cell, F_X, cellX + nodeValue(cell, F_ML));
+                    setNodeValue(cell, F_CX, cellX + nodeValue(cell, F_ML) + borderScale * nodeValue(cell, F_BL) + nodeValue(cell, F_PL));
+                    setNodeValue(cell, F_W, cellWidth);
+                    setNodeValue(cell, F_CW, nonNegative(cellWidth - horizontalExtra));
+                    setNodeValue(cell, F_PARENT_SIZED_W, 1.0);
+                    float alignedY = cellY;
+                    if (rowSpan <= 1) {
+                        float offset = 0.0;
+                        int verticalAlign = int(nodeValue(cell, F_CLEAR));
+                        if (verticalAlign == 1) {
+                            offset = (cellHeight - nodeValue(cell, F_H)) * 0.5;
+                        } else if (verticalAlign == 2) {
+                            offset = cellHeight - nodeValue(cell, F_H);
+                        }
+                        alignedY += offset;
+                    }
+                    setNodeValue(cell, F_Y, alignedY + nodeValue(cell, F_MT));
+                    setNodeValue(cell, F_CY, alignedY + nodeValue(cell, F_MT) + borderScale * nodeValue(cell, F_BT) + nodeValue(cell, F_PT));
+                    if (rowSpan > 1 && nodeInt(cell, F_MODE_H) == 0) {
+                        setNodeValue(cell, F_H, cellHeight);
+                        setNodeValue(cell, F_CH, nonNegative(cellHeight - verticalExtra));
+                    }
+                    cell = nodeInt(cell, F_NEXT);
+                }
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int rowChild = tableGroupNode(child) ? nodeInt(child, F_FIRST) : child;
+            while (rowChild >= 0) {
+                if (!tableRowNode(rowChild)) {
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                    continue;
+                }
+                int row = int(nodeValue(rowChild, F_TABLE_ROW));
+                float rowY = nodeValue(index, F_CY);
+                for (int rr = 0; rr < row && rr < maxRows; rr++) {
+                    rowY += aux[rowBase + rr];
+                }
+                setNodeValue(rowChild, F_X, nodeValue(index, F_CX));
+                setNodeValue(rowChild, F_CX, nodeValue(index, F_CX));
+                setNodeValue(rowChild, F_W, nodeValue(index, F_CW));
+                setNodeValue(rowChild, F_CW, nodeValue(index, F_CW));
+                setNodeValue(rowChild, F_Y, rowY);
+                setNodeValue(rowChild, F_CY, rowY);
+                setNodeValue(rowChild, F_H, aux[rowBase + row]);
+                setNodeValue(rowChild, F_CH, aux[rowBase + row]);
+                rowChild = nodeInt(rowChild, F_NEXT);
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            if (tableGroupNode(child)) {
+                int rowChild = nodeInt(child, F_FIRST);
+                float firstY = 0.0;
+                float lastBottom = 0.0;
+                bool found = false;
+                while (rowChild >= 0) {
+                    if (tableRowNode(rowChild)) {
+                        float rowY = nodeValue(rowChild, F_Y);
+                        float rowBottom = rowY + nodeValue(rowChild, F_H);
+                        if (!found) {
+                            firstY = rowY;
+                            found = true;
+                        }
+                        lastBottom = rowBottom;
+                    }
+                    rowChild = nodeInt(rowChild, F_NEXT);
+                }
+                if (found) {
+                    setNodeValue(child, F_X, nodeValue(index, F_CX));
+                    setNodeValue(child, F_CX, nodeValue(index, F_CX));
+                    setNodeValue(child, F_W, nodeValue(index, F_CW));
+                    setNodeValue(child, F_CW, nodeValue(index, F_CW));
+                    setNodeValue(child, F_Y, firstY);
+                    setNodeValue(child, F_CY, firstY);
+                    setNodeValue(child, F_H, lastBottom - firstY);
+                    setNodeValue(child, F_CH, lastBottom - firstY);
+                }
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+
+        if (nodeInt(index, F_MODE_H) == 0) {
+            float totalHeight = 0.0;
+            for (int row = 0; row < rowCount && row < maxRows; row++) {
+                totalHeight += aux[rowBase + row];
+            }
+            float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) +
+                nodeValue(index, F_BT) + nodeValue(index, F_BB);
+            setNodeValue(index, F_CH, totalHeight);
+            setNodeValue(index, F_H, totalHeight + verticalExtra);
+        }
+        return;
+    }
+
+
+    if (push.mode == 10) {
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_OUT_OF_FLOW) == 0) {
+            return;
+        }
+        bool fixedPosition = (flags & FLAG_FIXED) != 0;
+        float cbX = 0.0;
+        float cbY = 0.0;
+        float cbWidth = push.viewWidth;
+        float cbHeight = push.viewHeight;
+        if (!fixedPosition) {
+            int ancestor = nodeInt(index, F_PARENT);
+            while (ancestor >= 0) {
+                int ancestorFlags = nodeFlags(ancestor);
+                if ((ancestorFlags & (FLAG_RELATIVE | FLAG_ABSOLUTE | FLAG_FIXED)) != 0) {
+                    cbX = nodeValue(ancestor, F_X) + nodeValue(ancestor, F_BL);
+                    cbY = nodeValue(ancestor, F_Y) + nodeValue(ancestor, F_BT);
+                    cbWidth = nodeValue(ancestor, F_CW) + nodeValue(ancestor, F_PL) + nodeValue(ancestor, F_PR);
+                    cbHeight = nodeValue(ancestor, F_CH) + nodeValue(ancestor, F_PT) + nodeValue(ancestor, F_PB);
+                    break;
+                }
+                ancestor = nodeInt(ancestor, F_PARENT);
+            }
+        }
+        int leftMode = nodeInt(index, F_LEFT_MODE);
+        int rightMode = nodeInt(index, F_RIGHT_MODE);
+        int topMode = nodeInt(index, F_TOP_MODE);
+        int bottomMode = nodeInt(index, F_BOTTOM_MODE);
+        float left = leftMode == 0 ? nodeValue(index, F_LEFT) : leftMode == 1 ? cbWidth * nodeValue(index, F_LEFT) * 0.01 + nodeValue(index, F_LEFT_OFFSET) : 0.0;
+        float right = rightMode == 0 ? nodeValue(index, F_RIGHT) : rightMode == 1 ? cbWidth * nodeValue(index, F_RIGHT) * 0.01 + nodeValue(index, F_RIGHT_OFFSET) : 0.0;
+        float top = topMode == 0 ? nodeValue(index, F_TOP) : topMode == 1 ? cbHeight * nodeValue(index, F_TOP) * 0.01 + nodeValue(index, F_TOP_OFFSET) : 0.0;
+        float bottom = bottomMode == 0 ? nodeValue(index, F_BOTTOM) : bottomMode == 1 ? cbHeight * nodeValue(index, F_BOTTOM) * 0.01 + nodeValue(index, F_BOTTOM_OFFSET) : 0.0;
+        float marginLeft = nodeValue(index, F_ML);
+        float marginRight = nodeValue(index, F_MR);
+        float marginTop = nodeValue(index, F_MT);
+        float marginBottom = nodeValue(index, F_MB);
+        float horizontalExtra = nodeValue(index, F_PL) + nodeValue(index, F_PR) + nodeValue(index, F_BL) + nodeValue(index, F_BR);
+        float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) + nodeValue(index, F_BT) + nodeValue(index, F_BB);
+        int widthMode = nodeInt(index, F_MODE_W);
+        float contentWidth = nodeValue(index, F_CW);
+        if (widthMode == 0) {
+            if (leftMode != 2 && rightMode != 2) {
+                contentWidth = cbWidth - left - right - marginLeft - marginRight - horizontalExtra;
+            } else {
+                float available = cbWidth - marginLeft - marginRight - horizontalExtra;
+                if (leftMode != 2) {
+                    available -= left;
+                }
+                if (rightMode != 2) {
+                    available -= right;
+                }
+                contentWidth = max(nodeValue(index, F_IMIN), min(available, nodeValue(index, F_IMAX)));
+            }
+        } else if (widthMode == 1) {
+            contentWidth = nodeValue(index, F_SPEC_W);
+        } else if (widthMode == 2) {
+            contentWidth = cbWidth * nodeValue(index, F_SPEC_W) * 0.01 + nodeValue(index, F_SPEC_W_OFFSET);
+        } else {
+            contentWidth = nodeValue(index, F_IMAX);
+        }
+        contentWidth = nonNegative(contentWidth);
+        setNodeValue(index, F_CW, contentWidth);
+        setNodeValue(index, F_W, contentWidth + horizontalExtra);
+        float oldX = nodeValue(index, F_X);
+        float oldY = nodeValue(index, F_Y);
+        float boxX;
+        if (leftMode != 2) {
+            boxX = cbX + left + marginLeft;
+        } else if (rightMode != 2) {
+            boxX = cbX + cbWidth - right - (contentWidth + horizontalExtra) - marginRight;
+        } else if (nodeValue(index, F_HAS_STATIC) > 0.5) {
+            boxX = nodeValue(index, F_STATIC_X) + marginLeft;
+        } else {
+            boxX = cbX + marginLeft;
+        }
+        int heightMode = nodeInt(index, F_MODE_H);
+        float contentHeight = nodeValue(index, F_CH);
+        if (heightMode == 0) {
+            if (topMode != 2 && bottomMode != 2) {
+                contentHeight = cbHeight - top - bottom - marginTop - marginBottom - verticalExtra;
+            }
+        } else if (heightMode == 1) {
+            contentHeight = nodeValue(index, F_SPEC_H);
+        } else if (heightMode == 2) {
+            contentHeight = cbHeight * nodeValue(index, F_SPEC_H) * 0.01 + nodeValue(index, F_SPEC_H_OFFSET);
+        }
+        contentHeight = nonNegative(contentHeight);
+        setNodeValue(index, F_CH, contentHeight);
+        setNodeValue(index, F_H, contentHeight + verticalExtra);
+        float boxY;
+        if (topMode != 2) {
+            boxY = cbY + top + marginTop;
+        } else if (bottomMode != 2) {
+            boxY = cbY + cbHeight - bottom - (contentHeight + verticalExtra) - marginBottom;
+        } else if (nodeValue(index, F_HAS_STATIC) > 0.5) {
+            boxY = nodeValue(index, F_STATIC_Y) + marginTop;
+        } else {
+            boxY = cbY + marginTop;
+        }
+        setNodeValue(index, F_X, boxX);
+        setNodeValue(index, F_Y, boxY);
+        setNodeValue(index, F_CX, boxX + nodeValue(index, F_BL) + nodeValue(index, F_PL));
+        setNodeValue(index, F_CY, boxY + nodeValue(index, F_BT) + nodeValue(index, F_PT));
+        shiftSubtree(index, boxX - oldX, boxY - oldY);
+        return;
+    }
+
+    if (push.mode == 9) {
+        int parent = nodeInt(index, F_PARENT);
+        float accumulatedX = parent >= 0 ? nodeValue(parent, F_REL_DX) : 0.0;
+        float accumulatedY = parent >= 0 ? nodeValue(parent, F_REL_DY) : 0.0;
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_RELATIVE) != 0) {
+            float baseWidth = parent >= 0 ? nodeValue(parent, F_CW) : push.viewWidth;
+            float baseHeight = parent >= 0 ? nodeValue(parent, F_CH) : push.viewHeight;
+            int leftMode = nodeInt(index, F_LEFT_MODE);
+            int rightMode = nodeInt(index, F_RIGHT_MODE);
+            int topMode = nodeInt(index, F_TOP_MODE);
+            int bottomMode = nodeInt(index, F_BOTTOM_MODE);
+            if (leftMode != 2) {
+                accumulatedX += leftMode == 1 ? baseWidth * nodeValue(index, F_LEFT) * 0.01 + nodeValue(index, F_LEFT_OFFSET) : nodeValue(index, F_LEFT);
+            } else if (rightMode != 2) {
+                accumulatedX -= rightMode == 1 ? baseWidth * nodeValue(index, F_RIGHT) * 0.01 + nodeValue(index, F_RIGHT_OFFSET) : nodeValue(index, F_RIGHT);
+            }
+            if (topMode != 2) {
+                accumulatedY += topMode == 1 ? baseHeight * nodeValue(index, F_TOP) * 0.01 + nodeValue(index, F_TOP_OFFSET) : nodeValue(index, F_TOP);
+            } else if (bottomMode != 2) {
+                accumulatedY -= bottomMode == 1 ? baseHeight * nodeValue(index, F_BOTTOM) * 0.01 + nodeValue(index, F_BOTTOM_OFFSET) : nodeValue(index, F_BOTTOM);
+            }
+        }
+        setNodeValue(index, F_REL_DX, accumulatedX);
+        setNodeValue(index, F_REL_DY, accumulatedY);
+        if (accumulatedX != 0.0 || accumulatedY != 0.0) {
+            setNodeValue(index, F_X, nodeValue(index, F_X) + accumulatedX);
+            setNodeValue(index, F_Y, nodeValue(index, F_Y) + accumulatedY);
+            setNodeValue(index, F_CX, nodeValue(index, F_CX) + accumulatedX);
+            setNodeValue(index, F_CY, nodeValue(index, F_CY) + accumulatedY);
+        }
+        return;
+    }
+
+
+    if (push.mode == 11) {
+        int stackBase = push.target;
+        int total = max(1, int(nodeValue(0, F_SUBTREE_SIZE)));
+        int top = 0;
+        aux[stackBase + 0] = 0.0;
+        aux[stackBase + 1] = -push.scrollX;
+        aux[stackBase + 2] = -push.scrollY;
+        top = 1;
+        int found = -1;
+        float foundDepth = -1.0;
+        float foundX = 0.0;
+        float foundY = 0.0;
+        float foundWidth = 0.0;
+        float foundHeight = 0.0;
+        while (top > 0) {
+            top--;
+            int base = stackBase + top * 3;
+            int node = int(aux[base + 0]);
+            float offsetX = aux[base + 1];
+            float offsetY = aux[base + 2];
+            float boxX = nodeValue(node, F_X) + offsetX;
+            float boxY = nodeValue(node, F_Y) + offsetY;
+            float boxWidth = nodeValue(node, F_W);
+            float boxHeight = nodeValue(node, F_H);
+            if (push.queryX < boxX || push.queryY < boxY ||
+                push.queryX >= boxX + boxWidth || push.queryY >= boxY + boxHeight) {
+                continue;
+            }
+            int nodeLayoutFlags = nodeFlags(node);
+            if ((nodeLayoutFlags & FLAG_CLIP_X) != 0 &&
+                (push.queryX < nodeValue(node, F_CX) + offsetX ||
+                 push.queryX >= nodeValue(node, F_CX) + offsetX + nodeValue(node, F_CW))) {
+                continue;
+            }
+            if ((nodeLayoutFlags & FLAG_CLIP_Y) != 0 &&
+                (push.queryY < nodeValue(node, F_CY) + offsetY ||
+                 push.queryY >= nodeValue(node, F_CY) + offsetY + nodeValue(node, F_CH))) {
+                continue;
+            }
+            float depth = nodeValue(node, F_DEPTH);
+            if (depth > foundDepth || (depth == foundDepth && node > found)) {
+                found = node;
+                foundDepth = depth;
+                foundX = boxX;
+                foundY = boxY;
+                foundWidth = boxWidth;
+                foundHeight = boxHeight;
+            }
+            float childOffsetX = offsetX - nodeValue(node, F_SCROLL_LEFT);
+            float childOffsetY = offsetY - nodeValue(node, F_SCROLL_TOP);
+            int child = nodeInt(node, F_FIRST);
+            while (child >= 0 && top < total) {
+                int childBase = stackBase + top * 3;
+                aux[childBase + 0] = float(child);
+                aux[childBase + 1] = childOffsetX;
+                aux[childBase + 2] = childOffsetY;
+                top++;
+                child = nodeInt(child, F_NEXT);
+            }
+        }
+        aux[0] = found < 0 ? 0.0 : float(found + 1);
+        aux[1] = foundX;
+        aux[2] = foundY;
+        aux[3] = foundWidth;
+        aux[4] = foundHeight;
+        return;
+    }
+
+    if (push.mode == 12) {
+        int node = push.queryNode;
+        float offsetX = -push.scrollX;
+        float offsetY = -push.scrollY;
+        int ancestor = nodeInt(node, F_PARENT);
+        while (ancestor >= 0) {
+            offsetX -= nodeValue(ancestor, F_SCROLL_LEFT);
+            offsetY -= nodeValue(ancestor, F_SCROLL_TOP);
+            ancestor = nodeInt(ancestor, F_PARENT);
+        }
+        aux[0] = 1.0;
+        aux[1] = nodeValue(node, F_X) + offsetX;
+        aux[2] = nodeValue(node, F_Y) + offsetY;
+        aux[3] = nodeValue(node, F_W);
+        aux[4] = nodeValue(node, F_H);
+        return;
+    }
+
+    if (push.mode == 13) {
+        int node = push.queryNode;
+        aux[0] = 1.0;
+        aux[1] = nodeValue(node, F_SCROLL_W);
+        aux[2] = nodeValue(node, F_SCROLL_H);
+        aux[3] = nodeValue(node, F_CW);
+        aux[4] = nodeValue(node, F_CH);
+        aux[5] = nodeValue(node, F_SCROLL_FLAGS);
+        return;
+    }
+
+    if (push.mode == 1) {
+        int kind = nodeInt(index, F_KIND);
+        int parent = nodeInt(index, F_PARENT);
+        float containingWidth = parent >= 0 ? nodeValue(parent, F_CW) : push.viewWidth;
+        float containingHeight = parent >= 0 ? nodeValue(parent, F_CH) : push.viewHeight;
+        float containingX = parent >= 0 ? nodeValue(parent, F_CX) : 0.0;
+        float containingY = parent >= 0 ? nodeValue(parent, F_CY) : 0.0;
+
+        float marginTop = nodeInt(index, F_MT_MODE) == 0 ? nodeValue(index, F_MT) : resolveLength(index, F_MT_MODE, F_MT, containingWidth);
+        float marginRight = resolveLength(index, F_MR_MODE, F_MR, containingWidth);
+        float marginBottom = nodeInt(index, F_MB_MODE) == 0 ? nodeValue(index, F_MB) : resolveLength(index, F_MB_MODE, F_MB, containingWidth);
+        float marginLeft = resolveLength(index, F_ML_MODE, F_ML, containingWidth);
+        float paddingTop = resolveLength(index, F_PT_MODE, F_PT, containingWidth);
+        float paddingRight = resolveLength(index, F_PR_MODE, F_PR, containingWidth);
+        float paddingBottom = resolveLength(index, F_PB_MODE, F_PB, containingWidth);
+        float paddingLeft = resolveLength(index, F_PL_MODE, F_PL, containingWidth);
+        float borderTop = nodeValue(index, F_BT);
+        float borderRight = nodeValue(index, F_BR);
+        float borderBottom = nodeValue(index, F_BB);
+        float borderLeft = nodeValue(index, F_BL);
+        setNodeValue(index, F_MT, marginTop);
+        setNodeValue(index, F_MR, marginRight);
+        setNodeValue(index, F_MB, marginBottom);
+        setNodeValue(index, F_ORIG_MB, marginBottom);
+        setNodeValue(index, F_ML, marginLeft);
+        setNodeValue(index, F_PT, paddingTop);
+        setNodeValue(index, F_PR, paddingRight);
+        setNodeValue(index, F_PB, paddingBottom);
+        setNodeValue(index, F_PL, paddingLeft);
+
+        bool borderBox = (nodeFlags(index) & FLAG_BORDER_BOX) != 0;
+        float horizontalExtra = paddingLeft + paddingRight + borderLeft + borderRight;
+        float verticalExtra = paddingTop + paddingBottom + borderTop + borderBottom;
+        int widthMode = nodeInt(index, F_MODE_W);
+        float specifiedWidth = nodeValue(index, F_SPEC_W);
+        bool preserveWidth = widthMode == 0 && nodeValue(index, F_PARENT_SIZED_W) > 0.5;
+        float contentWidth;
+        if (widthMode == 0) {
+            contentWidth = preserveWidth ? nodeValue(index, F_CW) :
+                containingWidth - marginLeft - marginRight - horizontalExtra;
+        } else if (widthMode == 1) {
+            contentWidth = specifiedWidth;
+        } else if (widthMode == 2) {
+            contentWidth = containingWidth * specifiedWidth * 0.01 + nodeValue(index, F_SPEC_W_OFFSET);
+        } else if (widthMode == 3) {
+            contentWidth = nodeValue(index, F_IMIN);
+        } else if (widthMode == 4) {
+            contentWidth = nodeValue(index, F_IMAX);
+        } else {
+            contentWidth = clamp(containingWidth - marginLeft - marginRight - horizontalExtra,
+                nodeValue(index, F_IMIN), nodeValue(index, F_IMAX));
+        }
+        if (borderBox && !preserveWidth && widthMode != 0) {
+            contentWidth -= horizontalExtra;
+        }
+        int minMode = nodeInt(index, F_MINW_MODE);
+        if (minMode == 0 || minMode == 1) {
+            float minimum = minMode == 1 ? containingWidth * nodeValue(index, F_MIN_W) * 0.01 + nodeValue(index, F_MIN_W_OFFSET) : nodeValue(index, F_MIN_W);
+            if (borderBox) {
+                minimum -= horizontalExtra;
+            }
+            contentWidth = max(contentWidth, minimum);
+        }
+        int maxMode = nodeInt(index, F_MAXW_MODE);
+        if (maxMode == 0 || maxMode == 1) {
+            float maximum = maxMode == 1 ? containingWidth * nodeValue(index, F_MAX_W) * 0.01 + nodeValue(index, F_MAX_W_OFFSET) : nodeValue(index, F_MAX_W);
+            if (borderBox) {
+                maximum -= horizontalExtra;
+            }
+            contentWidth = min(contentWidth, maximum);
+        }
+        contentWidth = nonNegative(contentWidth);
+        setNodeValue(index, F_CW, contentWidth);
+        setNodeValue(index, F_W, contentWidth + horizontalExtra);
+        bool autoLeft = nodeInt(index, F_ML_MODE) == 2;
+        bool autoRight = nodeInt(index, F_MR_MODE) == 2;
+        int parentFlagsForMargins = parent >= 0 ? nodeFlags(parent) : 0;
+        bool flexOrGridItem = (parentFlagsForMargins & (FLAG_FLEX_CONTAINER | FLAG_GRID_CONTAINER)) != 0;
+        float horizontalRemaining = containingWidth - (contentWidth + horizontalExtra) - marginLeft - marginRight;
+        if (flexOrGridItem) {
+            horizontalRemaining = 0.0;
+        }
+        if (autoLeft && autoRight && horizontalRemaining > 0.0) {
+            marginLeft = horizontalRemaining * 0.5;
+            marginRight = horizontalRemaining * 0.5;
+        } else if (autoLeft && horizontalRemaining > 0.0) {
+            marginLeft = horizontalRemaining;
+        } else if (autoRight && horizontalRemaining > 0.0) {
+            marginRight = horizontalRemaining;
+        }
+        setNodeValue(index, F_ML, marginLeft);
+        setNodeValue(index, F_MR, marginRight);
+        float boxX = containingX + marginLeft;
+        setNodeValue(index, F_X, boxX);
+        setNodeValue(index, F_CX, boxX + borderLeft + paddingLeft);
+
+        int heightMode = nodeInt(index, F_MODE_H);
+        float specifiedHeight = nodeValue(index, F_SPEC_H);
+        float contentHeight;
+        if (heightMode == 0) {
+            contentHeight = nodeValue(index, F_IHEIGHT);
+            float aspect = nodeValue(index, F_ASPECT);
+            if (aspect > 0.0 && contentWidth > 0.0) {
+                contentHeight = contentWidth / aspect;
+            }
+        } else if (heightMode == 1) {
+            contentHeight = specifiedHeight;
+            if (borderBox) {
+                contentHeight -= verticalExtra;
+            }
+        } else if (heightMode == 2) {
+            if (containingHeight <= 0.0) {
+                contentHeight = nodeValue(index, F_IHEIGHT);
+            } else {
+                contentHeight = containingHeight * specifiedHeight * 0.01 + nodeValue(index, F_SPEC_H_OFFSET);
+                if (borderBox) {
+                    contentHeight -= verticalExtra;
+                }
+            }
+        } else if (heightMode == 3) {
+            contentHeight = nodeValue(index, F_IHEIGHT);
+        } else if (heightMode == 4) {
+            contentHeight = nodeValue(index, F_IHEIGHT);
+        } else {
+            contentHeight = nodeValue(index, F_IHEIGHT);
+        }
+        int minHeightMode = nodeInt(index, F_MINH_MODE);
+        if ((minHeightMode == 0 || minHeightMode == 1) && (minHeightMode == 0 || containingHeight > 0.0)) {
+            float minimum = minHeightMode == 1 ? containingHeight * nodeValue(index, F_MIN_H) * 0.01 + nodeValue(index, F_MIN_H_OFFSET) : nodeValue(index, F_MIN_H);
+            if (borderBox) {
+                minimum -= verticalExtra;
+            }
+            contentHeight = max(contentHeight, minimum);
+        }
+        int maxHeightMode = nodeInt(index, F_MAXH_MODE);
+        if ((maxHeightMode == 0 || maxHeightMode == 1) && (maxHeightMode == 0 || containingHeight > 0.0)) {
+            float maximum = maxHeightMode == 1 ? containingHeight * nodeValue(index, F_MAX_H) * 0.01 + nodeValue(index, F_MAX_H_OFFSET) : nodeValue(index, F_MAX_H);
+            if (borderBox) {
+                maximum -= verticalExtra;
+            }
+            contentHeight = min(contentHeight, maximum);
+        }
+        contentHeight = nonNegative(contentHeight);
+        if (kind == 2) {
+            contentWidth = nodeValue(index, F_TEXT_W);
+            contentHeight = nodeValue(index, F_LINE);
+            setNodeValue(index, F_CW, contentWidth);
+            setNodeValue(index, F_W, contentWidth);
+        }
+        setNodeValue(index, F_CH, contentHeight);
+        setNodeValue(index, F_H, contentHeight + verticalExtra);
+        float boxY = containingY + marginTop;
+        setNodeValue(index, F_Y, boxY);
+        setNodeValue(index, F_CY, boxY + borderTop + paddingTop);
+        return;
+    }
+
+    if (push.mode == 2) {
+        int flags = nodeFlags(index);
+        if ((flags & (FLAG_GRID_CONTAINER | FLAG_TABLE_CONTAINER | FLAG_TABLE_ROW | FLAG_TABLE_ROW_GROUP)) != 0) {
+            return;
+        }
+        if ((flags & FLAG_FLEX_CONTAINER) != 0) {
+            bool column = (flags & FLAG_FLEX_COLUMN) != 0;
+            bool wrap = (flags & FLAG_FLEX_WRAP) != 0;
+            float mainSize = column ? nodeValue(index, F_CH) : nodeValue(index, F_CW);
+            float mainStart = column ? nodeValue(index, F_CY) : nodeValue(index, F_CX);
+            float crossStart = column ? nodeValue(index, F_CX) : nodeValue(index, F_CY);
+            float gap = nodeValue(index, F_FLEX_GAP);
+            int justify = int(nodeValue(index, F_FLEX_JUSTIFY));
+            int align = int(nodeValue(index, F_FLEX_ALIGN));
+            float lineCursor = crossStart;
+            int lineFirst = nodeInt(index, F_FIRST);
+            while (lineFirst >= 0) {
+                int child = lineFirst;
+                int lineEnd = -1;
+                int lineCount = 0;
+                float used = 0.0;
+                float growSum = 0.0;
+                float shrinkSum = 0.0;
+                float crossMax = 0.0;
+                while (child >= 0) {
+                    float base = flexBase(child, column, mainSize);
+                    float extra = lineCount > 0 ? gap : 0.0;
+                    float mainMargin = column ? nodeValue(child, F_MT) + nodeValue(child, F_MB) : nodeValue(child, F_ML) + nodeValue(child, F_MR);
+                    if (wrap && lineCount > 0 && used + extra + mainMargin + base > mainSize + 0.001) {
+                        break;
+                    }
+                    used += extra + mainMargin + base;
+                    growSum += nodeValue(child, F_FLEX_GROW);
+                    shrinkSum += nodeValue(child, F_FLEX_SHRINK) * max(base, 0.0);
+                    float cross = column ?
+                        nodeValue(child, F_ML) + nodeValue(child, F_W) + nodeValue(child, F_MR) :
+                        nodeValue(child, F_MT) + nodeValue(child, F_H) + nodeValue(child, F_MB);
+                    if (cross > crossMax) {
+                        crossMax = cross;
+                    }
+                    lineCount++;
+                    lineEnd = child;
+                    child = nodeInt(child, F_NEXT);
+                }
+                if (!column && nodeInt(index, F_MODE_H) != 0) {
+                    crossMax = max(crossMax, nodeValue(index, F_CH));
+                }
+                float remaining = mainSize - used;
+                float spacing = 0.0;
+                float mainCursor = mainStart;
+                if (growSum <= 0.0 && remaining > 0.0) {
+                    if (justify == 1 && lineCount > 1) {
+                        spacing = remaining / float(lineCount - 1);
+                    } else if (justify == 2) {
+                        mainCursor += remaining * 0.5;
+                    } else if (justify == 3) {
+                        mainCursor += remaining;
+                    }
+                }
+                child = lineFirst;
+                for (int item = 0; item < lineCount; item++) {
+                    float base = flexBase(child, column, mainSize);
+                    float grow = nodeValue(child, F_FLEX_GROW);
+                    float mainValue = base;
+                    if (growSum > 0.0 && remaining > 0.0) {
+                        mainValue += remaining * grow / growSum;
+                    } else if (remaining < 0.0 && shrinkSum > 0.0) {
+                        mainValue += remaining * nodeValue(child, F_FLEX_SHRINK) * max(base, 0.0) / shrinkSum;
+                        float minimumMain = nodeValue(child, F_IMIN);
+                        if (column) {
+                            minimumMain = 0.0;
+                        }
+                        mainValue = max(mainValue, minimumMain);
+                    }
+                    float cross = column ?
+                        nodeValue(child, F_ML) + nodeValue(child, F_W) + nodeValue(child, F_MR) :
+                        nodeValue(child, F_MT) + nodeValue(child, F_H) + nodeValue(child, F_MB);
+                    float crossPos = lineCursor;
+                    if (align == 1) {
+                        crossPos += (crossMax - cross) * 0.5;
+                    } else if (align == 2) {
+                        crossPos += crossMax - cross;
+                    }
+                    if (column) {
+                        float extra = nodeValue(child, F_PT) + nodeValue(child, F_PB) +
+                            nodeValue(child, F_BT) + nodeValue(child, F_BB);
+                        mainCursor += nodeValue(child, F_MT);
+                        setNodeValue(child, F_Y, mainCursor);
+                        setNodeValue(child, F_CY, mainCursor + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                        setNodeValue(child, F_H, mainValue + extra);
+                        setNodeValue(child, F_CH, nonNegative(mainValue));
+                        setNodeValue(child, F_X, crossPos + nodeValue(child, F_ML));
+                        setNodeValue(child, F_CX, crossPos + nodeValue(child, F_ML) + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                        mainCursor += mainValue + nodeValue(child, F_MB);
+                    } else {
+                        float extra = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                            nodeValue(child, F_BL) + nodeValue(child, F_BR);
+                        mainCursor += nodeValue(child, F_ML);
+                        setNodeValue(child, F_X, mainCursor);
+                        setNodeValue(child, F_CX, mainCursor + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                        setNodeValue(child, F_W, mainValue + extra);
+                        setNodeValue(child, F_CW, nonNegative(mainValue));
+                        setNodeValue(child, F_PARENT_SIZED_W, 1.0);
+                        setNodeValue(child, F_Y, crossPos + nodeValue(child, F_MT));
+                        setNodeValue(child, F_CY, crossPos + nodeValue(child, F_MT) + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                        mainCursor += mainValue + nodeValue(child, F_MR);
+                    }
+                    if (item + 1 < lineCount) {
+                        mainCursor += gap + spacing;
+                    }
+                    child = nodeInt(child, F_NEXT);
+                }
+                lineCursor += crossMax + (column ? gap : 0.0);
+                lineFirst = lineEnd >= 0 ? nodeInt(lineEnd, F_NEXT) : -1;
+                if (!wrap) {
+                    break;
+                }
+            }
+            if (nodeInt(index, F_MODE_H) == 0) {
+                float contentHeight = nonNegative(lineCursor - nodeValue(index, F_CY));
+                float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) +
+                    nodeValue(index, F_BT) + nodeValue(index, F_BB);
+                setNodeValue(index, F_CH, contentHeight);
+                setNodeValue(index, F_H, contentHeight + verticalExtra);
+            }
+            return;
+        }
+        float paddingTop = nodeValue(index, F_PT);
+        float paddingBottom = nodeValue(index, F_PB);
+        float borderScale = nodeValue(index, F_TABLE_COLLAPSE) > 0.5 ? 0.5 : 1.0;
+        float borderTop = nodeValue(index, F_BT) * borderScale;
+        float borderBottom = nodeValue(index, F_BB) * borderScale;
+        float verticalExtra = paddingTop + paddingBottom + borderTop + borderBottom;
+        if ((flags & FLAG_VERTICAL) != 0 && (flags & FLAG_BLOCK_CONTAINER) != 0) {
+            bool rightToLeft = (flags & FLAG_VERTICAL_R_L) != 0;
+            float cursorX = rightToLeft ? nodeValue(index, F_CX) + nodeValue(index, F_CW) : nodeValue(index, F_CX);
+            float maximumHeight = 0.0;
+            int child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                int childFlags = nodeFlags(child);
+                if ((childFlags & FLAG_OUT_OF_FLOW) != 0) {
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                if ((childFlags & (FLAG_FLOAT_LEFT | FLAG_FLOAT_RIGHT)) != 0) {
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                float marginStart = rightToLeft ? nodeValue(child, F_MR) : nodeValue(child, F_ML);
+                float marginEnd = rightToLeft ? nodeValue(child, F_ML) : nodeValue(child, F_MR);
+                float marginTop = nodeValue(child, F_MT);
+                float desiredX;
+                if (rightToLeft) {
+                    desiredX = cursorX - marginStart - nodeValue(child, F_W);
+                    cursorX = desiredX - marginEnd;
+                } else {
+                    desiredX = cursorX + marginStart;
+                    cursorX = desiredX + nodeValue(child, F_W) + marginEnd;
+                }
+                setNodeValue(child, F_X, desiredX);
+                setNodeValue(child, F_CX, desiredX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                float childY = nodeValue(index, F_CY) + marginTop;
+                setNodeValue(child, F_Y, childY);
+                setNodeValue(child, F_CY, childY + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                float outerHeight = nodeValue(child, F_H) + marginTop + nodeValue(child, F_MB);
+                if (outerHeight > maximumHeight) {
+                    maximumHeight = outerHeight;
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            if (nodeInt(index, F_MODE_H) == 0) {
+                setNodeValue(index, F_CH, maximumHeight);
+                setNodeValue(index, F_H, maximumHeight + verticalExtra);
+            }
+            return;
+        }
+        if ((flags & FLAG_BLOCK_CONTAINER) != 0) {
+            float cursor = nodeValue(index, F_CY);
+            float previousMargin = 0.0;
+            int child = nodeInt(index, F_FIRST);
+            bool first = true;
+            bool collapsedFirst = (flags & FLAG_COLLAPSED_FIRST) != 0;
+            bool collapseLastBottom = (flags & FLAG_BLOCK_FORMATTING) == 0 && nodeInt(index, F_MODE_H) == 0 &&
+                !parentFlexOrGrid(index) && nodeValue(index, F_BB) + nodeValue(index, F_PB) == 0.0;
+            float floatBottom = nodeValue(index, F_CY);
+            while (child >= 0) {
+                int childFlags = nodeFlags(child);
+                if ((childFlags & FLAG_OUT_OF_FLOW) != 0) {
+                    setNodeValue(child, F_STATIC_X, nodeValue(index, F_CX));
+                    setNodeValue(child, F_STATIC_Y, cursor);
+                    setNodeValue(child, F_HAS_STATIC, 1.0);
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                if ((childFlags & (FLAG_FLOAT_LEFT | FLAG_FLOAT_RIGHT)) != 0) {
+                    bool rightFloat = (childFlags & FLAG_FLOAT_RIGHT) != 0;
+                    float targetX = rightFloat ?
+                        nodeValue(index, F_CX) + nodeValue(index, F_CW) - nodeValue(child, F_MR) - nodeValue(child, F_W) :
+                        nodeValue(index, F_CX) + nodeValue(child, F_ML);
+                    float targetY = max(cursor, nodeValue(index, F_CY));
+                    int prior = nodeInt(index, F_FIRST);
+                    while (prior >= 0 && prior != child) {
+                        int priorFlags = nodeFlags(prior);
+                        if ((priorFlags & (FLAG_FLOAT_LEFT | FLAG_FLOAT_RIGHT)) != 0) {
+                            float priorTop = nodeValue(prior, F_Y);
+                            float priorBottom = priorTop + nodeValue(prior, F_H);
+                            if (targetY < priorBottom && priorTop < targetY + nodeValue(child, F_H)) {
+                                if (rightFloat) {
+                                    float candidate = nodeValue(prior, F_X) - nodeValue(child, F_W);
+                                    if (candidate < targetX) {
+                                        targetX = candidate;
+                                    }
+                                } else {
+                                    float candidate = nodeValue(prior, F_X) + nodeValue(prior, F_W);
+                                    if (candidate > targetX) {
+                                        targetX = candidate;
+                                    }
+                                }
+                            }
+                        }
+                        prior = nodeInt(prior, F_NEXT);
+                    }
+                    if (targetX < nodeValue(index, F_CX) || targetX + nodeValue(child, F_W) > nodeValue(index, F_CX) + nodeValue(index, F_CW)) {
+                        targetX = rightFloat ?
+                            nodeValue(index, F_CX) + nodeValue(index, F_CW) - nodeValue(child, F_MR) - nodeValue(child, F_W) :
+                            nodeValue(index, F_CX) + nodeValue(child, F_ML);
+                        targetY += nodeValue(child, F_H);
+                    }
+                    setNodeValue(child, F_X, targetX);
+                    setNodeValue(child, F_CX, targetX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                    setNodeValue(child, F_Y, targetY);
+                    setNodeValue(child, F_CY, targetY + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                    float floatEnd = targetY + nodeValue(child, F_H) + nodeValue(child, F_MB);
+                    if (floatEnd > floatBottom) {
+                        floatBottom = floatEnd;
+                    }
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                if (nodeValue(child, F_CLEAR) > 0.5) {
+                    cursor = max(cursor, floatBottom);
+                }
+                if (floatBottom > cursor) {
+                    cursor = floatBottom;
+                }
+                float marginTop = nodeValue(child, F_MT);
+                float marginBottom = nodeValue(child, F_MB);
+                float childCollapseTop = nodeValue(child, F_COLLAPSE_TOP);
+                float baseCollapsed;
+                if (first) {
+                    baseCollapsed = collapsedFirst ? 0.0 : marginTop;
+                } else {
+                    baseCollapsed = collapseMargin(previousMargin, marginTop);
+                }
+                float childY = cursor + baseCollapsed - marginTop + childCollapseTop;
+                bool selfCollapsing = nodeInt(child, F_MODE_H) == 0 && nodeInt(child, F_COUNT) == 0 &&
+                    nodeValue(child, F_PT) + nodeValue(child, F_PB) +
+                    nodeValue(child, F_BT) + nodeValue(child, F_BB) == 0.0;
+                if (selfCollapsing) {
+                    float childX = nodeValue(index, F_CX) + nodeValue(child, F_ML);
+                    setNodeValue(child, F_X, childX);
+                    setNodeValue(child, F_CX, childX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                    setNodeValue(child, F_Y, childY);
+                    setNodeValue(child, F_CY, childY);
+                    previousMargin = collapseMargin(baseCollapsed, marginBottom);
+                    first = false;
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                int childWidthMode = nodeInt(child, F_MODE_W);
+                if (childWidthMode == 0 || childWidthMode == 2) {
+                    float childExtra = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                        nodeValue(child, F_BL) + nodeValue(child, F_BR);
+                    float childContentWidth;
+                    if (childWidthMode == 0) {
+                        childContentWidth = nodeValue(index, F_CW) - nodeValue(child, F_ML) - nodeValue(child, F_MR) - childExtra;
+                    } else {
+                        childContentWidth = nodeValue(index, F_CW) * nodeValue(child, F_SPEC_W) * 0.01 +
+                            nodeValue(child, F_SPEC_W_OFFSET);
+                        if ((nodeFlags(child) & FLAG_BORDER_BOX) != 0) {
+                            childContentWidth -= childExtra;
+                        }
+                    }
+                    int childMinMode = nodeInt(child, F_MINW_MODE);
+                    if (childMinMode == 0 || childMinMode == 1) {
+                        float minimum = childMinMode == 1 ?
+                            nodeValue(index, F_CW) * nodeValue(child, F_MIN_W) * 0.01 + nodeValue(child, F_MIN_W_OFFSET) :
+                            nodeValue(child, F_MIN_W);
+                        childContentWidth = max(childContentWidth, minimum);
+                    }
+                    int childMaxMode = nodeInt(child, F_MAXW_MODE);
+                    if (childMaxMode == 0 || childMaxMode == 1) {
+                        float maximum = childMaxMode == 1 ?
+                            nodeValue(index, F_CW) * nodeValue(child, F_MAX_W) * 0.01 + nodeValue(child, F_MAX_W_OFFSET) :
+                            nodeValue(child, F_MAX_W);
+                        childContentWidth = min(childContentWidth, maximum);
+                    }
+                    childContentWidth = nonNegative(childContentWidth);
+                    setNodeValue(child, F_CW, childContentWidth);
+                    setNodeValue(child, F_W, childContentWidth + childExtra);
+                    setNodeValue(child, F_PARENT_SIZED_W, 1.0);
+                }
+                float childX = nodeValue(index, F_CX) + nodeValue(child, F_ML);
+                setNodeValue(child, F_X, childX);
+                setNodeValue(child, F_CX, childX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                setNodeValue(child, F_Y, childY);
+                setNodeValue(child, F_CY, childY + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                bool lastChild = nodeInt(child, F_NEXT) < 0;
+                cursor = childY + nodeValue(child, F_H);
+                if (lastChild && !collapseLastBottom) {
+                    cursor += marginBottom;
+                }
+                previousMargin = marginBottom;
+                first = false;
+                child = nodeInt(child, F_NEXT);
+            }
+            if (nodeInt(index, F_MODE_H) == 0) {
+                float contentHeight = nonNegative(cursor - nodeValue(index, F_CY));
+                setNodeValue(index, F_CH, contentHeight);
+                setNodeValue(index, F_H, contentHeight + verticalExtra);
+            }
+        } else if ((flags & FLAG_INLINE_CONTAINER) != 0) {
+            float contentX = nodeValue(index, F_CX);
+            float contentWidth = nodeValue(index, F_CW);
+            bool wrap = (nodeFlags(index) & FLAG_NO_WRAP) == 0;
+            float lineHeight = nodeValue(index, F_LINE);
+            if (lineHeight <= 0.0) {
+                lineHeight = 19.2;
+            }
+            float baseline = nodeValue(index, F_ASCENT);
+            int child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                int childFlags = nodeFlags(child);
+                if ((childFlags & FLAG_OUT_OF_FLOW) != 0) {
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                float outerHeight = nodeValue(child, F_MT) + nodeValue(child, F_H) + nodeValue(child, F_MB);
+                if (outerHeight > lineHeight) {
+                    lineHeight = outerHeight;
+                }
+                float childAscent = nodeInt(child, F_KIND) == 2 ? nodeValue(child, F_ASCENT) : nodeValue(child, F_H);
+                if (int(nodeValue(child, F_VERTICAL_ALIGN)) == 1) {
+                    childAscent = nodeValue(child, F_H) * 0.5 + nodeValue(child, F_FONT) * 0.25;
+                }
+                if (childAscent > baseline) {
+                    baseline = childAscent;
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                int childFlags = nodeFlags(child);
+                if ((childFlags & FLAG_OUT_OF_FLOW) == 0 &&
+                    nodeValue(child, F_ATOMIC_INLINE) > 0.5 &&
+                    nodeInt(child, F_MODE_W) == 0) {
+                    float childExtra = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                        nodeValue(child, F_BL) + nodeValue(child, F_BR);
+                    float available = nonNegative(contentWidth - nodeValue(child, F_ML) -
+                        nodeValue(child, F_MR) - childExtra);
+                    float desired = nodeValue(child, F_IMAX);
+                    if (desired > available) {
+                        desired = available;
+                    }
+                    if (desired < nodeValue(child, F_IMIN)) {
+                        desired = nodeValue(child, F_IMIN);
+                    }
+                    setNodeValue(child, F_CW, nonNegative(desired));
+                    setNodeValue(child, F_W, nonNegative(desired) + childExtra);
+                    setNodeValue(child, F_PARENT_SIZED_W, 1.0);
+                } else if ((childFlags & FLAG_OUT_OF_FLOW) == 0 &&
+                    nodeInt(child, F_KIND) == 1 && nodeValue(child, F_ATOMIC_INLINE) < 0.5 &&
+                    nodeInt(child, F_MODE_W) == 0) {
+                    float childExtra = nodeValue(child, F_PL) + nodeValue(child, F_PR) +
+                        nodeValue(child, F_BL) + nodeValue(child, F_BR);
+                    float desired = nodeValue(child, F_IMAX);
+                    setNodeValue(child, F_CW, nonNegative(desired));
+                    setNodeValue(child, F_W, nonNegative(desired) + childExtra);
+                    setNodeValue(child, F_PARENT_SIZED_W, 1.0);
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            float usedWidth = 0.0;
+            bool firstRun = true;
+            child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                if ((nodeFlags(child) & FLAG_OUT_OF_FLOW) == 0 && nodeValue(child, F_FORCE_BREAK) < 0.5) {
+                    if (!firstRun && nodeValue(child, F_SPACE_BEFORE) > 0.5) {
+                        usedWidth += nodeValue(child, F_FONT) * 0.25;
+                    }
+                    usedWidth += nodeValue(child, F_ML) + nodeValue(child, F_W) + nodeValue(child, F_MR);
+                    firstRun = false;
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            int textAlign = int(nodeValue(index, F_TEXT_ALIGN));
+            float cursorX = contentX;
+            float lineY = nodeValue(index, F_CY);
+            child = nodeInt(index, F_FIRST);
+            bool lineHasContent = false;
+            while (child >= 0) {
+                int childFlags = nodeFlags(child);
+                if ((childFlags & FLAG_OUT_OF_FLOW) != 0) {
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                if (nodeValue(child, F_FORCE_BREAK) > 0.5) {
+                    lineY += lineHeight;
+                    lineHasContent = false;
+                    child = nodeInt(child, F_NEXT);
+                    continue;
+                }
+                if (!lineHasContent) {
+                    float lineWidth = inlineLineWidthFrom(child, contentWidth, wrap);
+                    cursorX = contentX + inlineAlignOffset(textAlign, contentWidth, lineWidth);
+                }
+                float space = 0.0;
+                if (lineHasContent && nodeValue(child, F_SPACE_BEFORE) > 0.5) {
+                    space = nodeValue(child, F_FONT) * 0.25;
+                }
+                float childWidth = nodeValue(child, F_W);
+                if (wrap && cursorX + space + childWidth > contentX + contentWidth + 6.0 && lineHasContent) {
+                    lineY += lineHeight;
+                    space = 0.0;
+                    lineHasContent = false;
+                    float lineWidth = inlineLineWidthFrom(child, contentWidth, wrap);
+                    cursorX = contentX + inlineAlignOffset(textAlign, contentWidth, lineWidth);
+                }
+                cursorX += space;
+                int verticalAlign = int(nodeValue(child, F_VERTICAL_ALIGN));
+                float childAscent = nodeInt(child, F_KIND) == 2 ? nodeValue(child, F_ASCENT) : nodeValue(child, F_H);
+                float childY;
+                if (verticalAlign == 1) {
+                    childY = lineY + (lineHeight - nodeValue(child, F_H)) * 0.5;
+                } else if (verticalAlign == 2) {
+                    childY = lineY;
+                } else if (verticalAlign == 3) {
+                    childY = lineY + lineHeight - nodeValue(child, F_H);
+                } else {
+                    childY = lineY + baseline - childAscent;
+                }
+                float childX = cursorX + nodeValue(child, F_ML);
+                setNodeValue(child, F_X, childX);
+                setNodeValue(child, F_CX, childX + nodeValue(child, F_BL) + nodeValue(child, F_PL));
+                setNodeValue(child, F_Y, childY);
+                setNodeValue(child, F_CY, childY + nodeValue(child, F_BT) + nodeValue(child, F_PT));
+                cursorX += nodeValue(child, F_ML) + childWidth + nodeValue(child, F_MR);
+                lineHasContent = true;
+                child = nodeInt(child, F_NEXT);
+            }
+            if (nodeInt(index, F_MODE_H) == 0) {
+                float contentHeight = nonNegative(lineY + lineHeight - nodeValue(index, F_CY));
+                setNodeValue(index, F_CH, contentHeight);
+                setNodeValue(index, F_H, contentHeight + verticalExtra);
+            }
+        }
+        return;
+    }
+
+    if (push.mode == 3) {
+        int kind = nodeInt(index, F_KIND);
+        int layoutFlags = nodeFlags(index);
+        if ((layoutFlags & (FLAG_GRID_CONTAINER | FLAG_TABLE_CONTAINER | FLAG_TABLE_ROW | FLAG_TABLE_ROW_GROUP | FLAG_VERTICAL)) != 0) {
+            return;
+        }
+        if (kind == 2 || (layoutFlags & FLAG_REPLACED) != 0) {
+            return;
+        }
+        if (nodeInt(index, F_MODE_H) != 0) {
+            return;
+        }
+        float aspect = nodeValue(index, F_ASPECT);
+        if (aspect > 0.0 && nodeValue(index, F_CW) > 0.0) {
+            float contentHeight = nodeValue(index, F_CW) / aspect;
+            float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) +
+                nodeValue(index, F_BT) + nodeValue(index, F_BB);
+            setNodeValue(index, F_CH, contentHeight);
+            setNodeValue(index, F_H, contentHeight + verticalExtra);
+            return;
+        }
+        float verticalExtra = nodeValue(index, F_PT) + nodeValue(index, F_PB) +
+            nodeValue(index, F_BT) + nodeValue(index, F_BB);
+        if ((layoutFlags & FLAG_FLEX_CONTAINER) != 0) {
+            float bottom = nodeValue(index, F_CY);
+            int child = nodeInt(index, F_FIRST);
+            while (child >= 0) {
+                if ((nodeFlags(child) & FLAG_OUT_OF_FLOW) == 0) {
+                    bottom = max(bottom, nodeValue(child, F_Y) + nodeValue(child, F_H) + nodeValue(child, F_MB));
+                }
+                child = nodeInt(child, F_NEXT);
+            }
+            float contentHeight = nonNegative(bottom - nodeValue(index, F_CY));
+            setNodeValue(index, F_CH, contentHeight);
+            setNodeValue(index, F_H, contentHeight + verticalExtra);
+            return;
+        }
+        if ((layoutFlags & FLAG_INLINE_CONTAINER) != 0) {
+            return;
+        }
+        if ((layoutFlags & FLAG_BLOCK_CONTAINER) == 0) {
+            return;
+        }
+        bool collapsedFirst = (layoutFlags & FLAG_COLLAPSED_FIRST) != 0;
+        bool collapseLastBottom = (layoutFlags & FLAG_BLOCK_FORMATTING) == 0 && !parentFlexOrGrid(index) &&
+            nodeValue(index, F_BB) + nodeValue(index, F_PB) == 0.0;
+        float cursor = nodeValue(index, F_CY);
+        float pendingMargin = 0.0;
+        float floatBottom = nodeValue(index, F_CY);
+        bool first = true;
+        int child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int childFlags = nodeFlags(child);
+            if ((childFlags & FLAG_OUT_OF_FLOW) != 0) {
+                child = nodeInt(child, F_NEXT);
+                continue;
+            }
+            if ((childFlags & (FLAG_FLOAT_LEFT | FLAG_FLOAT_RIGHT)) != 0) {
+                floatBottom = max(floatBottom, nodeValue(child, F_Y) + nodeValue(child, F_H) + nodeValue(child, F_MB));
+                child = nodeInt(child, F_NEXT);
+                continue;
+            }
+            cursor = max(cursor, floatBottom);
+            float marginTop = nodeValue(child, F_MT);
+            float marginBottom = nodeValue(child, F_MB);
+            float baseCollapsed = first ? (collapsedFirst ? 0.0 : marginTop) : collapseMargin(pendingMargin, marginTop);
+            bool selfCollapsing = nodeInt(child, F_MODE_H) == 0 && nodeInt(child, F_COUNT) == 0 &&
+                nodeValue(child, F_PT) + nodeValue(child, F_PB) +
+                nodeValue(child, F_BT) + nodeValue(child, F_BB) == 0.0;
+            if (selfCollapsing) {
+                pendingMargin = collapseMargin(baseCollapsed, marginBottom);
+                first = false;
+                child = nodeInt(child, F_NEXT);
+                continue;
+            }
+            cursor = nodeValue(child, F_Y) + nodeValue(child, F_H);
+            pendingMargin = marginBottom;
+            if (collapseLastBottom && nodeInt(child, F_NEXT) < 0) {
+                pendingMargin = 0.0;
+            }
+            first = false;
+            child = nodeInt(child, F_NEXT);
+        }
+        if (!first) {
+            cursor += pendingMargin;
+        }
+        cursor = max(cursor, floatBottom);
+        float contentHeight = nonNegative(cursor - nodeValue(index, F_CY));
+        setNodeValue(index, F_CH, contentHeight);
+        setNodeValue(index, F_H, contentHeight + verticalExtra);
+        return;
+    }
+
+    if (push.mode == 14) {
+        int flags = nodeFlags(index);
+        if ((flags & FLAG_BLOCK_CONTAINER) == 0 || (flags & FLAG_BLOCK_FORMATTING) != 0 || parentFlexOrGrid(index)) {
+            return;
+        }
+        if (nodeInt(index, F_MODE_H) != 0 || nodeValue(index, F_BB) + nodeValue(index, F_PB) != 0.0) {
+            return;
+        }
+        int last = -1;
+        int child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int childFlags = nodeFlags(child);
+            if ((childFlags & (FLAG_OUT_OF_FLOW | FLAG_FLOAT_LEFT | FLAG_FLOAT_RIGHT)) == 0) {
+                last = child;
+            }
+            child = nodeInt(child, F_NEXT);
+        }
+        if (last < 0 || nodeInt(last, F_KIND) != 0) {
+            return;
+        }
+        setNodeValue(index, F_MB, collapseMargin(nodeValue(index, F_ORIG_MB), nodeValue(last, F_MB)));
+        return;
+    }
+
+    if (push.mode == 4) {
+        float contentX = nodeValue(index, F_CX);
+        float contentY = nodeValue(index, F_CY);
+        float maxRight = contentX + nodeValue(index, F_CW);
+        float maxBottom = contentY + nodeValue(index, F_CH);
+        int child = nodeInt(index, F_FIRST);
+        while (child >= 0) {
+            int childFlags = nodeFlags(child);
+            float boxRight = nodeValue(child, F_X) + nodeValue(child, F_W);
+            float boxBottom = nodeValue(child, F_Y) + nodeValue(child, F_H);
+            float childRight = (childFlags & FLAG_CLIP_X) != 0 ?
+                boxRight : nodeValue(child, F_CX) + nodeValue(child, F_SCROLL_W);
+            float childBottom = (childFlags & FLAG_CLIP_Y) != 0 ?
+                boxBottom : nodeValue(child, F_CY) + nodeValue(child, F_SCROLL_H);
+            maxRight = max(maxRight, max(boxRight, childRight));
+            maxBottom = max(maxBottom, max(boxBottom, childBottom));
+            child = nodeInt(child, F_NEXT);
+        }
+        float scrollWidth = nonNegative(maxRight - contentX);
+        float scrollHeight = nonNegative(maxBottom - contentY);
+        setNodeValue(index, F_SCROLL_W, scrollWidth);
+        setNodeValue(index, F_SCROLL_H, scrollHeight);
+        int layoutFlags = nodeFlags(index);
+        float scrollFlags = 0.0;
+        if ((layoutFlags & FLAG_OVERFLOW_Y) != 0 && scrollHeight > nodeValue(index, F_CH) + 0.5) {
+            scrollFlags += 1.0;
+        }
+        if ((layoutFlags & FLAG_OVERFLOW_X) != 0 && scrollWidth > nodeValue(index, F_CW) + 0.5) {
+            scrollFlags += 2.0;
+        }
+        setNodeValue(index, F_SCROLL_FLAGS, scrollFlags);
+        return;
+    }
+}

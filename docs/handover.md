@@ -51,7 +51,7 @@ seccomp guard.
 ```sh
 go build ./...                          # compile everything
 go vet ./...                            # static checks
-gofmt -l cmd urls parsers protocols caches storages internal dom styles layouts rendering windowing browsers ipc runtime brokers shells adapters   # formatting
+gofmt -l cmd urls parsers protocols caches storages internal dom styles layouting rendering windowing browsers ipc runtime brokers shells adapters   # formatting
 go test ./... -count=1                  # unit + integration tests
 go run ./cmd/netsurfctl deps-check      # enforce the no-third-party policy
 go run ./cmd/netsurfctl urlparse 'https://www.example.com:8443/a/b?x=1#f'
@@ -136,7 +136,7 @@ Current verification baseline:
   flow honors block-axis margins, and text rotation metadata is recorded.
   `DocumentLayout` reuses clean subtree geometry for style-only mutations and
   verifies incremental output against full layout. A 35-case layout conformance
-  harness (`layouts/testdata/cases.json`) passes all cases, and
+  harness (`layouting/testdata/cases.json`) passes all cases, and
   `netsurfctl layout <file|url>` provides an end-to-end parse/style/layout
   geometry dump.
 - Rendering: the `rendering` package has premultiplied RGBA8 surfaces, anti-aliased
@@ -168,7 +168,7 @@ Current verification baseline:
   is the visual baseline and `FuzzGradient` covers malformed gradient syntax.
 - Fonts: `rendering/fonts` matches embedded Go fonts and lazily indexed system
   TrueType/OpenType files by family/weight/style, provides per-rune fallback,
-  real ascent/descent/advances and kerning through `layouts.TextShaper`, and
+  real ascent/descent/advances and kerning through `layouting/model.TextShaper`, and
   caches rasterized glyph masks. The renderer uses the same library for layout,
   measurement, and painting. Shaping and glyph-cache benchmarks cover the text
   hot paths.
@@ -274,7 +274,7 @@ Current verification baseline:
 | `parsers/css/nesting/` | CSS Nesting parsing and `&` resolution. |
 | `dom/` | Namespace-aware mutable DOM: nodes, documents, attributes, queries, templates, shadow scaffolding, sandbox flags. |
 | `styles/` | Indexed selector matcher, UA stylesheet, presentational hints, and the style-resolution engine. |
-| `layouts/` | Box tree, formatting contexts, sizing, positioning, text metrics, overflow, and incremental layout. |
+| `layouting/` | Box model, software/Vulkan layout backends, sizing, positioning, text metrics, overflow, and incremental layout. |
 | `rendering/` | Surfaces, path rasterization, stroking, clipping, Porter-Duff compositing, paint traversal, color conversion, and headless render. |
 | `rendering/images/` | PNG/JPEG/GIF/WebP decoding, GIF animation metadata, EXIF orientation, and pixel/frame budgets. |
 | `rendering/fonts/` | Embedded/system font matching, text shaping, metrics, per-rune fallback, and a glyph mask cache. |
@@ -322,7 +322,7 @@ These are intentional, tracked gaps rather than surprises:
   edge.
 - **Computed values cover the style engine's supported property set.** Font, color,
   line-height, opacity, border widths, and generic length/angle/time conversion are
-  implemented. Layout-specific used values are handled by `layouts`; percentage
+  implemented. Layout-specific used values are handled by `layouting`; percentage
   resolution against containing blocks, intrinsic sizing, and text metrics are present
   but several layout refinements remain partial.
 - **Layout is fully verified against the geometry harness and paint integration.**

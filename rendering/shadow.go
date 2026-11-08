@@ -1,11 +1,11 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"math"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/parsers/css/tokenizer"
 	"gonetsurf/styles"
@@ -104,7 +104,7 @@ func parseBoxShadows(style *styles.Style) []boxShadow {
 	return shadows
 }
 
-func (painter *Painter) paintOuterShadows(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func (painter *Painter) paintOuterShadows(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	shadows := parseBoxShadows(box.Style)
 	if len(shadows) == 0 {
 		return
@@ -138,7 +138,7 @@ func (painter *Painter) paintOuterShadows(box *layouts.Box, surface interfaces.C
 	}
 }
 
-func (painter *Painter) paintInnerShadows(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func (painter *Painter) paintInnerShadows(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	shadows := parseBoxShadows(box.Style)
 	if len(shadows) == 0 {
 		return

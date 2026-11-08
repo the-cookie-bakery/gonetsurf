@@ -1,11 +1,11 @@
 package rendering
 
 import (
+	"gonetsurf/layouting/model"
 	"math"
 	"strconv"
 	"strings"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/parsers/css/tokenizer"
 )
@@ -74,7 +74,7 @@ func skewAffine(xAngle, yAngle float64) affine {
 
 // parseBoxTransform returns the absolute transform matrix for box and whether
 // the box declares a transform.
-func parseBoxTransform(box *layouts.Box) (affine, bool) {
+func parseBoxTransform(box *model.Box) (affine, bool) {
 	if box == nil || box.Style == nil {
 		return identityAffine, false
 	}
@@ -109,7 +109,7 @@ func parseBoxTransform(box *layouts.Box) (affine, bool) {
 		multiply(translationAffine(-originX, -originY)), true
 }
 
-func transformFunction(function *parser.Function, box *layouts.Box) (affine, bool) {
+func transformFunction(function *parser.Function, box *model.Box) (affine, bool) {
 	name := strings.ToLower(function.Name)
 	values := nonWhitespaceValues(function.Value)
 	switch name {
@@ -248,7 +248,7 @@ func transformAngle(values []parser.ComponentValue, index int) (float64, bool) {
 	return angle * math.Pi / 180, true
 }
 
-func transformOrigin(box *layouts.Box) (float64, float64) {
+func transformOrigin(box *model.Box) (float64, float64) {
 	originX := box.X + box.Width/2
 	originY := box.Y + box.Height/2
 	if box.Style == nil {

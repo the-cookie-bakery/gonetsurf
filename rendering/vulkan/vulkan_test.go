@@ -76,7 +76,7 @@ func TestRendererDrawsImage(t *testing.T) {
 	scene := &interfaces.Scene{Width: 16, Height: 16}
 	scene.Commands = []interfaces.Command{
 		{Kind: interfaces.CommandClear, Color: geometry.NewColor(0, 0, 0)},
-		{Kind: interfaces.CommandDrawImage, Image: source, Rect: geometry.Rect{X: 0, Y: 0, Width: 16, Height: 16}, Opacity: 1},
+		{Kind: interfaces.CommandDrawImage, Image: source, Rect: geometry.Rect{X: 0, Y: 0, Width: 16, Height: 16}, Clip: geometry.Rect{Width: 16, Height: 16}, Opacity: 1},
 	}
 	surface, err := renderer.Render(scene)
 	if err != nil {
@@ -253,7 +253,7 @@ func TestRendererCoversFullQuad(t *testing.T) {
 	scene := &interfaces.Scene{Width: 16, Height: 16}
 	scene.Commands = []interfaces.Command{
 		{Kind: interfaces.CommandClear, Color: geometry.Color{}},
-		{Kind: interfaces.CommandDrawImage, Image: source, Rect: geometry.Rect{Width: 16, Height: 16}, Opacity: 1},
+		{Kind: interfaces.CommandDrawImage, Image: source, Rect: geometry.Rect{Width: 16, Height: 16}, Clip: geometry.Rect{Width: 16, Height: 16}, Opacity: 1},
 	}
 	surface, err := renderer.Render(scene)
 	if err != nil {

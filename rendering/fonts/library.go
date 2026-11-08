@@ -5,6 +5,7 @@ package fonts
 
 import (
 	"fmt"
+	"gonetsurf/layouting/model"
 	"math"
 	"os"
 	"path/filepath"
@@ -26,7 +27,6 @@ import (
 	"golang.org/x/image/font/opentype"
 	"golang.org/x/image/font/sfnt"
 
-	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/parser"
 	"gonetsurf/parsers/css/tokenizer"
 	"gonetsurf/styles"
@@ -796,14 +796,14 @@ func FaceForRuneChain(faces []font.Face, character rune) font.Face {
 }
 
 // MetricsForSpec returns font metrics for spec.
-func (library *Library) MetricsForSpec(spec Spec) layouts.FontMetrics {
+func (library *Library) MetricsForSpec(spec Spec) model.FontMetrics {
 	entry := library.selectEntry(spec)
 	face := library.faceForEntry(entry, spec)
 	if face == nil {
 		face = library.Face(Spec{Family: "Go", Size: spec.Size, Weight: spec.Weight})
 	}
 	if face == nil {
-		return layouts.MetricsForStyle(nil)
+		return model.MetricsForStyle(nil)
 	}
 	metrics := face.Metrics()
 	average := spec.Size * 0.5
@@ -824,7 +824,7 @@ func (library *Library) MetricsForSpec(spec Spec) layouts.FontMetrics {
 			lineGap = *entry.lineGapOverride * spec.Size
 		}
 	}
-	return layouts.FontMetrics{
+	return model.FontMetrics{
 		Ascent:         ascent,
 		Descent:        descent,
 		LineGap:        lineGap,
@@ -833,6 +833,6 @@ func (library *Library) MetricsForSpec(spec Spec) layouts.FontMetrics {
 }
 
 // Metrics returns font metrics for style.
-func (library *Library) Metrics(style *styles.Style) layouts.FontMetrics {
+func (library *Library) Metrics(style *styles.Style) model.FontMetrics {
 	return library.MetricsForSpec(SpecFromStyle(style))
 }

@@ -41,12 +41,12 @@ func main() {
 		}
 		initial = parsed
 	}
-	backend, err := backends.Select(rendererName)
+	pipeline, err := backends.SelectPipeline(rendererName)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "netsurf:", err)
 		os.Exit(2)
 	}
-	renderer, err := backend.NewRenderer()
+	renderer, err := pipeline.Renderer.NewRenderer()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "netsurf:", err)
 		os.Exit(1)
@@ -64,6 +64,7 @@ func main() {
 	const height = 768
 	shell := shells.New(width, height, nil, shells.BrokerClients{Network: broker.network, Storage: broker.storage})
 	shell.SetRenderer(renderer)
+	shell.SetLayoutBackend(pipeline.Layout)
 	if initial == nil {
 		_ = shell.LoadSession(context.Background())
 	}

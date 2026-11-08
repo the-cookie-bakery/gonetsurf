@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gonetsurf/layouting/model"
 	"image"
 	"image/png"
 	"io"
@@ -19,7 +20,7 @@ import (
 	"gonetsurf/adapters"
 	"gonetsurf/dom"
 	"gonetsurf/internal/reftest"
-	"gonetsurf/layouts"
+	layoutinterfaces "gonetsurf/layouting/interfaces"
 	parsershtml "gonetsurf/parsers/html"
 	"gonetsurf/protocols/http1"
 	"gonetsurf/rendering"
@@ -31,7 +32,10 @@ import (
 	"gonetsurf/windowing/x11"
 )
 
-var activeRenderer interfaces.Renderer
+var (
+	activeRenderer interfaces.Renderer
+	activeLayout   layoutinterfaces.Backend
+)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -43,12 +47,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
 		os.Exit(2)
 	}
-	backend, err := backends.Select(rendererName)
+	pipeline, err := backends.SelectPipeline(rendererName)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
 		os.Exit(2)
 	}
-	activeRenderer, err = backend.NewRenderer()
+	activeLayout = pipeline.Layout
+	activeRenderer, err = pipeline.Renderer.NewRenderer()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
 		os.Exit(1)
@@ -376,6 +381,7 @@ func reftestCommand(arguments []string) error {
 		LoadStylesheet: fetchStylesheet,
 		Tolerance:      0,
 		Renderer:       activeRenderer,
+		LayoutBackend:  activeLayout,
 	}
 	result, err := reftest.Compare(testSource, referenceSource, baseURL, options)
 	if err != nil {
@@ -403,9 +409,10 @@ func documentFontLoader() fonts.Loader {
 
 func documentRenderOptions(documentURL *urls.URL) rendering.Options {
 	return rendering.Options{
-		Renderer: activeRenderer,
-		Images:   documentImageProvider(documentURL),
-		LoadFont: documentFontLoader(),
+		Renderer:      activeRenderer,
+		LayoutBackend: activeLayout,
+		Images:        documentImageProvider(documentURL),
+		LoadFont:      documentFontLoader(),
 	}
 }
 
@@ -481,7 +488,7 @@ type layoutBoxJSON struct {
 	Children      []layoutBoxJSON `json:"children,omitempty"`
 }
 
-func buildLayoutBox(box *layouts.Box) layoutBoxJSON {
+func buildLayoutBox(box *model.Box) layoutBoxJSON {
 	if box == nil {
 		return layoutBoxJSON{}
 	}

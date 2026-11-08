@@ -1,6 +1,8 @@
 package rendering
 
 import (
+	layoutinginterfaces "gonetsurf/layouting/interfaces"
+	"gonetsurf/layouting/model"
 	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
@@ -10,7 +12,6 @@ import (
 	"golang.org/x/image/font/basicfont"
 
 	"gonetsurf/dom"
-	"gonetsurf/layouts"
 	"gonetsurf/rendering/fonts"
 	"gonetsurf/urls"
 )
@@ -18,6 +19,7 @@ import (
 // Painter paints a laid-out box tree. The zero value paints with the default
 // data-URL image provider and the default system font library.
 type Painter struct {
+	Geometry   layoutinginterfaces.GeometryHandle
 	Images     ImageProvider
 	imageCache map[string]*image.NRGBA
 	Face       font.Face
@@ -42,12 +44,12 @@ func NewPainter(images ImageProvider) *Painter {
 
 // Paint paints a laid-out box tree onto surface. The caller owns clearing the
 // surface; Paint draws shadows, backgrounds, borders, and text in tree order.
-func Paint(root *layouts.Box, surface interfaces.Canvas) {
+func Paint(root *model.Box, surface interfaces.Canvas) {
 	NewPainter(DataURLImageProvider{}).Paint(root, surface)
 }
 
 // Paint paints root onto surface.
-func (painter *Painter) Paint(root *layouts.Box, surface interfaces.Canvas) {
+func (painter *Painter) Paint(root *model.Box, surface interfaces.Canvas) {
 	if root == nil || surface == nil {
 		return
 	}
@@ -69,7 +71,7 @@ type borderSide struct {
 	color Color
 }
 
-func borderSides(box *layouts.Box, base float64) [4]borderSide {
+func borderSides(box *model.Box, base float64) [4]borderSide {
 	var sides [4]borderSide
 	names := []string{"top", "right", "bottom", "left"}
 	widths := []float64{
@@ -100,7 +102,7 @@ func borderVisible(side borderSide) bool {
 	return side.width > 0 && side.style != "" && side.style != "none" && side.style != "hidden"
 }
 
-func paintBorders(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
+func paintBorders(box *model.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if box.Style == nil {
 		return
 	}
@@ -371,7 +373,7 @@ func (painter *Painter) cachedRuneFace(spec fonts.Spec, faces []font.Face, chara
 	return face
 }
 
-func (painter *Painter) paintText(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
+func (painter *Painter) paintText(box *model.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	text := box.VisualText
 	if text == "" {
 		text = box.Text

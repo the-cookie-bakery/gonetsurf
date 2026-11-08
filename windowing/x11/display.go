@@ -482,6 +482,25 @@ func (window *Window) setProtocols() {
 	display.sendRequest(changePropertyRequest(window.id, protocolAtom, 4, 32, data))
 }
 
+// NativeWindowID returns the X11 window identifier.
+func (window *Window) NativeWindowID() uintptr {
+	if window == nil {
+		return 0
+	}
+	return uintptr(window.id)
+}
+
+// DisplayName returns the X display name used for this window.
+func (window *Window) DisplayName() string {
+	if window == nil || window.display == nil {
+		return os.Getenv("DISPLAY")
+	}
+	if window.display.options.Display != "" {
+		return window.display.options.Display
+	}
+	return os.Getenv("DISPLAY")
+}
+
 // Size returns the current window size.
 func (window *Window) Size() (width, height int) {
 	window.mutex.Lock()

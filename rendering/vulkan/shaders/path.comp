@@ -1,0 +1,93 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(std430, binding = 0) buffer Edges {
+    float edges[];
+};
+
+layout(rgba8, binding = 1) uniform image2D coverageImage;
+
+layout(push_constant) uniform PushConstants {
+    int edgeCount;
+    int width;
+    int height;
+    int rule;
+} push;
+
+const int MAX_CROSSINGS = 128;
+const int SUBSAMPLES = 4;
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (pixel.x >= push.width || pixel.y >= push.height) {
+        return;
+    }
+    float accumulated = 0.0;
+    for (int sub = 0; sub < SUBSAMPLES; sub++) {
+        float sampleY = float(pixel.y) + (float(sub) + 0.5) / float(SUBSAMPLES);
+        float crossings[MAX_CROSSINGS];
+        int windings[MAX_CROSSINGS];
+        int count = 0;
+        for (int edge = 0; edge < push.edgeCount && count < MAX_CROSSINGS; edge++) {
+            int base = edge * 5;
+            float x0 = edges[base + 0];
+            float y0 = edges[base + 1];
+            float x1 = edges[base + 2];
+            float y1 = edges[base + 3];
+            int winding = int(edges[base + 4]);
+            bool crosses = false;
+            if (y0 < y1) {
+                crosses = sampleY >= y0 && sampleY < y1;
+            } else if (y0 > y1) {
+                crosses = sampleY >= y1 && sampleY < y0;
+            }
+            if (!crosses) {
+                continue;
+            }
+            float progress = (sampleY - y0) / (y1 - y0);
+            float x = x0 + progress * (x1 - x0);
+            int position = count;
+            while (position > 0 && crossings[position - 1] > x) {
+                crossings[position] = crossings[position - 1];
+                windings[position] = windings[position - 1];
+                position--;
+            }
+            crossings[position] = x;
+            windings[position] = winding;
+            count++;
+        }
+        if (count < 2) {
+            continue;
+        }
+        if (push.rule == 1) {
+            for (int index = 0; index + 1 < count; index += 2) {
+                float start = crossings[index];
+                float end = crossings[index + 1];
+                float left = max(start, float(pixel.x));
+                float right = min(end, float(pixel.x + 1));
+                if (right > left) {
+                    accumulated += (right - left) / float(SUBSAMPLES);
+                }
+            }
+        } else {
+            int winding = 0;
+            float start = 0.0;
+            for (int index = 0; index < count; index++) {
+                int previous = winding;
+                winding += windings[index];
+                if (previous == 0 && winding != 0) {
+                    start = crossings[index];
+                } else if (previous != 0 && winding == 0) {
+                    float left = max(start, float(pixel.x));
+                    float right = min(crossings[index], float(pixel.x + 1));
+                    if (right > left) {
+                        accumulated += (right - left) / float(SUBSAMPLES);
+                    }
+                }
+            }
+        }
+    }
+    float value = clamp(accumulated, 0.0, 1.0);
+    imageStore(coverageImage, pixel, vec4(value, value, value, value));
+}

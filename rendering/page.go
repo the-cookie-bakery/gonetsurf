@@ -1,10 +1,15 @@
 package rendering
 
 import (
+	"gonetsurf/layouting"
+	"gonetsurf/layouting/model"
+	"image"
+	"strings"
+	"sync"
 	"sync/atomic"
 
 	"gonetsurf/dom"
-	"gonetsurf/layouts"
+	layoutinterfaces "gonetsurf/layouting/interfaces"
 	"gonetsurf/parsers/css/mediaqueries"
 	"gonetsurf/rendering/fonts"
 	"gonetsurf/rendering/interfaces"
@@ -24,12 +29,15 @@ type Page struct {
 	Width    int
 	Height   int
 
-	layout           *layouts.DocumentLayout
+	layout           *layouting.DocumentLayout
 	library          *fonts.Library
 	scrollX          float64
 	scrollY          float64
 	fontLoadCallback func()
 	fontLayoutDirty  atomic.Bool
+	imageLayoutDirty atomic.Bool
+	resourceMutex    sync.RWMutex
+	resourceCallback func()
 }
 
 // NewPage returns a page for document and engine.
@@ -44,9 +52,11 @@ func NewPage(document *dom.Document, engine *styles.Engine, width, height int, o
 	page.library = fontLibraryFor(document, engine, options)
 	page.library.SetAsyncAuthorFonts(options.AsyncFonts)
 	page.updateMediaEnvironment()
-	page.layout = layouts.NewDocumentLayout(document, engine, float64(page.Width), float64(page.Height))
+	page.layout = layouting.NewDocumentLayoutWithBackend(document, engine, options.LayoutBackend, float64(page.Width), float64(page.Height))
 	page.layout.Shaper = fonts.NewShaper(page.library)
 	page.layout.Metrics = page.library.Metrics
+	page.layout.IntrinsicSize = page.intrinsicSize
+	page.attachImageCallback()
 	return page
 }
 
@@ -86,6 +96,7 @@ func (page *Page) Invalidate() {
 	if page.layout != nil {
 		page.layout.Shaper = fonts.NewShaper(page.library)
 		page.layout.Metrics = page.library.Metrics
+		page.layout.IntrinsicSize = page.intrinsicSize
 	}
 }
 
@@ -96,15 +107,81 @@ func (page *Page) SetFontLoadedCallback(callback func()) {
 	if page == nil {
 		return
 	}
+	page.resourceMutex.Lock()
+	page.resourceCallback = callback
+	page.resourceMutex.Unlock()
 	page.fontLoadCallback = func() {
 		page.fontLayoutDirty.Store(true)
-		if callback != nil {
-			callback()
-		}
+		page.notifyResourceLoaded()
 	}
 	if page.library != nil {
 		page.library.SetLoadCallback(page.fontLoadCallback)
 	}
+}
+
+func (page *Page) attachImageCallback() {
+	setter, ok := page.Options.Images.(interface{ SetLoadCallback(func(string)) })
+	if !ok {
+		return
+	}
+	setter.SetLoadCallback(func(string) {
+		page.imageLayoutDirty.Store(true)
+		page.notifyResourceLoaded()
+	})
+}
+
+func (page *Page) notifyResourceLoaded() {
+	page.resourceMutex.RLock()
+	callback := page.resourceCallback
+	page.resourceMutex.RUnlock()
+	if callback != nil {
+		callback()
+	}
+}
+
+// intrinsicSize reports replaced-element dimensions to the layout engine. A
+// pending image uses a provisional box so the first frame can be painted
+// before the image decodes.
+func (page *Page) intrinsicSize(node *dom.Node, style *styles.Style) (float64, float64, bool, bool) {
+	if page == nil || node == nil || node.Type != dom.ElementNode {
+		return 0, 0, false, false
+	}
+	tag := strings.ToLower(node.Data)
+	source := ""
+	switch tag {
+	case "img":
+		source = imageSourceFor(node, 0)
+	case "video":
+		source, _ = node.GetAttribute("poster")
+	default:
+		return 0, 0, false, false
+	}
+	if strings.TrimSpace(source) == "" {
+		return 0, 0, false, false
+	}
+	peeker, ok := page.Options.Images.(interface {
+		PeekImage(string) (image.Image, bool)
+	})
+	if !ok {
+		return 300, 150, true, false
+	}
+	loaded, ok := peeker.PeekImage(source)
+	if !ok || loaded == nil {
+		return 0, 0, false, true
+	}
+	bounds := loaded.Bounds()
+	if bounds.Dx() <= 0 || bounds.Dy() <= 0 {
+		return 0, 0, false, true
+	}
+	return float64(bounds.Dx()), float64(bounds.Dy()), true, false
+}
+
+// Damage returns the layout damage from the most recent render.
+func (page *Page) Damage() []model.Rect {
+	if page == nil || page.layout == nil {
+		return nil
+	}
+	return page.layout.Damage()
 }
 
 func (page *Page) updateMediaEnvironment() {
@@ -118,11 +195,11 @@ func (page *Page) updateMediaEnvironment() {
 }
 
 // Box returns the laid-out document box tree.
-func (page *Page) Box() *layouts.Box {
+func (page *Page) Box() *model.Box {
 	return page.root()
 }
 
-func (page *Page) root() *layouts.Box {
+func (page *Page) root() *model.Box {
 	if page == nil || page.layout == nil {
 		return nil
 	}
@@ -143,6 +220,13 @@ func (page *Page) MaxScroll() (float64, float64) {
 	if root == nil {
 		return 0, 0
 	}
+	if page.layout != nil {
+		if query := page.layout.Query(); query != nil {
+			if width, height, ok, err := query.MaxScroll(root); err == nil && ok {
+				return width, height
+			}
+		}
+	}
 	return maxFloatValue(0, root.ScrollWidth-float64(page.Width)), maxFloatValue(0, root.ScrollHeight-float64(page.Height))
 }
 
@@ -158,7 +242,7 @@ func (page *Page) ScrollTo(left, top float64) {
 	page.applyScroll(root, left, top)
 }
 
-func (page *Page) applyScroll(root *layouts.Box, left, top float64) {
+func (page *Page) applyScroll(root *model.Box, left, top float64) {
 	maxX := maxFloatValue(0, root.ScrollWidth-float64(page.Width))
 	maxY := maxFloatValue(0, root.ScrollHeight-float64(page.Height))
 	if left < 0 {
@@ -177,6 +261,9 @@ func (page *Page) applyScroll(root *layouts.Box, left, top float64) {
 	page.scrollY = top
 	root.ScrollLeft = left
 	root.ScrollTop = top
+	if page.layout != nil {
+		page.layout.MarkGeometryDirty()
+	}
 }
 
 // ScrollBy adjusts the scroll offsets by the given deltas.
@@ -188,33 +275,40 @@ func (page *Page) ScrollBy(deltaX, deltaY float64) {
 }
 
 // BoxForNode returns the laid-out box generated for node.
-func (page *Page) BoxForNode(node *dom.Node) *layouts.Box {
+func (page *Page) BoxForNode(node *dom.Node) *model.Box {
 	if page == nil || node == nil {
 		return nil
 	}
-	return layouts.FindBox(page.root(), node)
+	return model.FindBox(page.root(), node)
 }
 
 // BoxRect returns the viewport-space rectangle of a node's box.
-func (page *Page) BoxRect(node *dom.Node) (layouts.Rect, bool) {
+func (page *Page) BoxRect(node *dom.Node) (model.Rect, bool) {
 	if page == nil || node == nil {
-		return layouts.Rect{}, false
+		return model.Rect{}, false
 	}
 	root := page.root()
 	if root == nil {
-		return layouts.Rect{}, false
+		return model.Rect{}, false
 	}
 	page.applyScroll(root, page.scrollX, page.scrollY)
-	box := layouts.FindBox(root, node)
+	box := model.FindBox(root, node)
 	if box == nil {
-		return layouts.Rect{}, false
+		return model.Rect{}, false
 	}
-	return layouts.BoxRect(root, box)
+	if page.layout != nil {
+		if query := page.layout.Query(); query != nil {
+			if rect, ok, err := query.BoxRect(box, 0, 0); err == nil && ok {
+				return rect, true
+			}
+		}
+	}
+	return model.BoxRect(root, box)
 }
 
 // ScrollTargetAt returns the nearest scroll container at a viewport point,
 // falling back to the document root.
-func (page *Page) ScrollTargetAt(x, y float64) *layouts.Box {
+func (page *Page) ScrollTargetAt(x, y float64) *model.Box {
 	root := page.root()
 	if root == nil {
 		return nil
@@ -239,6 +333,9 @@ func (page *Page) ScrollByAt(x, y, deltaX, deltaY float64) {
 		return
 	}
 	target.ScrollBy(deltaX, deltaY)
+	if page.layout != nil {
+		page.layout.MarkGeometryDirty()
+	}
 }
 
 // ScrollToAt scrolls the container under a viewport point to an offset.
@@ -252,6 +349,9 @@ func (page *Page) ScrollToAt(x, y, left, top float64) {
 		return
 	}
 	target.ScrollTo(left, top)
+	if page.layout != nil {
+		page.layout.MarkGeometryDirty()
+	}
 }
 
 // MaxScrollAt returns the scroll range of the container under a viewport point.
@@ -267,13 +367,20 @@ func (page *Page) MaxScrollAt(x, y float64) (float64, float64) {
 }
 
 // HitTest returns the deepest box at a viewport-space point.
-func (page *Page) HitTest(x, y float64) *layouts.Box {
+func (page *Page) HitTest(x, y float64) *model.Box {
 	root := page.root()
 	if root == nil {
 		return nil
 	}
 	page.applyScroll(root, page.scrollX, page.scrollY)
-	return layouts.HitTest(root, x, y)
+	if page.layout != nil {
+		if query := page.layout.Query(); query != nil {
+			if box, _, found, err := query.HitTest(x, y, 0, 0); err == nil && found {
+				return box
+			}
+		}
+	}
+	return model.HitTest(root, x, y)
 }
 
 // Render lays out the document when necessary and paints it.
@@ -282,7 +389,10 @@ func (page *Page) Render() (interfaces.Surface, error) {
 		return software.NewSurface(0, 0), nil
 	}
 	if page.fontLayoutDirty.Swap(false) && page.layout != nil {
-		page.layout.Invalidate()
+		page.layout.MarkResource(layoutinterfaces.ResourceFont)
+	}
+	if page.imageLayoutDirty.Swap(false) && page.layout != nil {
+		page.layout.MarkResource(layoutinterfaces.ResourceImage)
 	}
 	root := page.root()
 	renderer := page.Options.Renderer
@@ -302,7 +412,7 @@ func (page *Page) Render() (interfaces.Surface, error) {
 	return renderer.Render(recorder.Scene())
 }
 
-func (page *Page) paint(root *layouts.Box, canvas interfaces.Canvas) {
+func (page *Page) paint(root *model.Box, canvas interfaces.Canvas) {
 	page.applyScroll(root, page.scrollX, page.scrollY)
 	root.ScrollLeft = 0
 	root.ScrollTop = 0
@@ -312,6 +422,12 @@ func (page *Page) paint(root *layouts.Box, canvas interfaces.Canvas) {
 	painter.Subframes = page.Options.Subframes
 	painter.OffsetX = -page.scrollX
 	painter.OffsetY = -page.scrollY
+	if handle := page.layout.GeometryHandle(); handle != nil {
+		painter.Geometry = handle
+		if renderer, ok := page.Options.Renderer.(interfaces.GeometryRenderer); ok {
+			_ = renderer.SetGeometry(handle)
+		}
+	}
 	if page.Document != nil {
 		painter.BaseURL = page.Document.URL
 	}

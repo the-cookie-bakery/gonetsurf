@@ -77,6 +77,8 @@ type Command struct {
 	Composite geometry.CompositeOp
 	Source    Surface
 	Layer     *Layer
+	UseNode   bool
+	NodeIndex int
 }
 
 // Scene is a backend-neutral recorded frame.
