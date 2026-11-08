@@ -15,7 +15,11 @@ func keyEvent(key, text string, modifiers windowing.Modifiers) windowing.Event {
 
 func TestShellRenderAndInput(t *testing.T) {
 	shell := New(400, 300, nil)
-	surface := shell.Render()
+	rendered, renderErr := shell.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if surface.Width != 400 || surface.Height != 300 {
 		t.Fatalf("surface = %dx%d", surface.Width, surface.Height)
 	}

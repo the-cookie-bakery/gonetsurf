@@ -5,7 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"gonetsurf/rendering"
+	"gonetsurf/rendering/geometry"
+	"gonetsurf/rendering/software"
 )
 
 func BenchmarkPresentSHM(b *testing.B) {
@@ -19,7 +20,7 @@ func BenchmarkPresentSHM(b *testing.B) {
 	}
 	defer display.Close()
 	window := opened.(*Window)
-	window.Surface().Clear(rendering.NewColor(20, 40, 60))
+	window.Surface().Clear(geometry.NewColor(20, 40, 60))
 	_ = window.Present(image.Rect(0, 0, 256, 256))
 	b.ResetTimer()
 	for iteration := 0; iteration < b.N; iteration++ {
@@ -30,8 +31,8 @@ func BenchmarkPresentSHM(b *testing.B) {
 }
 
 func BenchmarkEncodeNRGBABand(b *testing.B) {
-	surface := rendering.NewSurface(256, 256)
-	surface.Clear(rendering.NewColor(20, 40, 60))
+	surface := software.NewSurface(256, 256)
+	surface.Clear(geometry.NewColor(20, 40, 60))
 	converted := surface.Image()
 	data := make([]byte, 256*256*4)
 	masks := [3]uint32{0xff0000, 0xff00, 0xff}

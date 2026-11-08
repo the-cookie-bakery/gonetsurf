@@ -32,10 +32,10 @@ func BenchmarkShellScrollRender(b *testing.B) {
 	tab.URL = base
 	tab.History = []*urls.URL{base}
 	shell.page = shell.newPageState(document, styleEngine(document), base, base, 1280, 746, tab, 0)
-	shell.Render()
+	_, _ = shell.Render()
 	b.ResetTimer()
 	for index := 0; index < b.N; index++ {
 		tab.SetScroll(0, float64(index%2000))
-		shell.Render()
+		_, _ = shell.Render()
 	}
 }

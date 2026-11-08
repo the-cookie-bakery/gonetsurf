@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
 	"strings"
@@ -29,14 +30,14 @@ type borderImageWidths struct {
 	left   float64
 }
 
-func (painter *Painter) paintBorders(box *layouts.Box, surface *Surface, xPos, yPos float64) {
+func (painter *Painter) paintBorders(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if painter.paintBorderImage(box, surface, xPos, yPos) {
 		return
 	}
 	paintBorders(box, surface, xPos, yPos)
 }
 
-func (painter *Painter) paintBorderImage(box *layouts.Box, surface *Surface, xPos, yPos float64) bool {
+func (painter *Painter) paintBorderImage(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) bool {
 	spec := parseBorderImageStyle(box.Style)
 	if spec == nil || spec.source == "" {
 		return false
@@ -106,7 +107,7 @@ type borderImageSourceAreas struct {
 	bottom int
 }
 
-func (painter *Painter) drawBorderImage(surface *Surface, sourceAreas borderImageSourceAreas, destination borderImageAreas, spec *borderImageSpec) {
+func (painter *Painter) drawBorderImage(surface interfaces.Canvas, sourceAreas borderImageSourceAreas, destination borderImageAreas, spec *borderImageSpec) {
 	picture := sourceAreas.source
 	bounds := picture.Bounds()
 	destinationRight := destination.x + destination.width
@@ -144,7 +145,7 @@ func (painter *Painter) drawBorderImage(surface *Surface, sourceAreas borderImag
 	}
 }
 
-func (painter *Painter) drawBorderImageEdge(surface *Surface, source image.Image, destination Rect, repeat string, horizontal bool) {
+func (painter *Painter) drawBorderImageEdge(surface interfaces.Canvas, source image.Image, destination Rect, repeat string, horizontal bool) {
 	sourceBounds := source.Bounds()
 	if sourceBounds.Dx() == 0 || sourceBounds.Dy() == 0 || destination.Width <= 0 || destination.Height <= 0 {
 		return

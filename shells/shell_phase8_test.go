@@ -162,7 +162,11 @@ func TestShellRendersInlineFrame(t *testing.T) {
 	if len(shell.page.frames) != 1 {
 		t.Fatalf("frames = %d", len(shell.page.frames))
 	}
-	surface := shell.Render()
+	rendered, renderErr := shell.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	pixel := surface.Pix[(topBarHeight+10)*surface.Stride+10*4:]
 	if pixel[0] != 0 || pixel[1] != 255 || pixel[2] != 0 {
 		t.Errorf("iframe pixel = %v", pixel[:4])
@@ -263,7 +267,11 @@ func TestShellLoadsLinkedStylesheetsAndImports(t *testing.T) {
 			writer.Write([]byte(`<!doctype html><html><head><link rel="stylesheet" href="/style.css"></head><body><div id="box"></div></body></html>`))
 		}
 	}))
-	surface := shell.Render()
+	rendered, renderErr := shell.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	pixel := surface.Pix[(topBarHeight+10)*surface.Stride+10*4:]
 	if pixel[0] != 255 || pixel[1] != 0 || pixel[2] != 0 {
 		t.Errorf("stylesheet pixel = %v", pixel[:4])
@@ -280,14 +288,20 @@ func TestShellResizeRelayoutsPage(t *testing.T) {
 		</style></head><body><div id="box"></div></body></html>`))
 	}))
 	shell.Resize(1000, 500)
-	shell.Render()
+	if _, renderErr := shell.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	box := shell.page.document.GetElementById("box")
 	layoutBox := shell.page.page.BoxForNode(box)
 	if layoutBox == nil || layoutBox.Width != 700 {
 		t.Fatalf("wide layout = %v", layoutBox)
 	}
 	shell.Resize(500, 400)
-	surface := shell.Render()
+	rendered, renderErr := shell.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	layoutBox = shell.page.page.BoxForNode(box)
 	if layoutBox == nil || layoutBox.Width != 300 {
 		t.Errorf("narrow layout = %v", layoutBox)

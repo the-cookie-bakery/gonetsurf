@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"strconv"
 	"strings"
 
@@ -15,7 +16,7 @@ type imageCandidate struct {
 	density float64
 }
 
-func (painter *Painter) paintReplacedContent(box *layouts.Box, surface *Surface, offsetX, offsetY float64) {
+func (painter *Painter) paintReplacedContent(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	if box.Node == nil || box.Node.Type != dom.ElementNode {
 		return
 	}
@@ -38,8 +39,8 @@ func (painter *Painter) paintReplacedContent(box *layouts.Box, surface *Surface,
 	switch tag {
 	case "iframe":
 		if painter.Subframes != nil {
-			frame := painter.Subframes.RenderSubframe(box.Node, int(contentWidth), int(contentHeight))
-			if frame != nil {
+			frame, err := painter.Subframes.RenderSubframe(box.Node, int(contentWidth), int(contentHeight))
+			if err == nil && frame != nil {
 				if painter.framePainted == nil {
 					painter.framePainted = make(map[*dom.Node]bool)
 				}
@@ -92,7 +93,7 @@ func (painter *Painter) paintReplacedContent(box *layouts.Box, surface *Surface,
 // contentClipMask clips replaced content to the content-edge curve, as
 // required by CSS Backgrounds and Borders 3 §4.3 and exercised by WPT
 // css/css-backgrounds/border-radius-clip-001.html.
-func contentClipMask(box *layouts.Box, surface *Surface, contentRect Rect) *Mask {
+func contentClipMask(box *layouts.Box, surface interfaces.Canvas, contentRect Rect) *Mask {
 	if box == nil || box.Style == nil || surface == nil {
 		return nil
 	}
@@ -107,7 +108,7 @@ func contentClipMask(box *layouts.Box, surface *Surface, contentRect Rect) *Mask
 	}
 	path := NewPath()
 	path.AddRoundedRect(contentRect, contentRadii)
-	return RasterizeFill(path, surface.Width, surface.Height, NonZeroFill)
+	return RasterizeFill(path, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 }
 
 func imageSourceFor(node *dom.Node, contentWidth float64) string {

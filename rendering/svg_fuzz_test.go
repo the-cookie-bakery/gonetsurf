@@ -1,6 +1,10 @@
 package rendering
 
-import "testing"
+import (
+	"testing"
+
+	"gonetsurf/rendering/software"
+)
 
 func FuzzSVG(f *testing.F) {
 	for _, seed := range []string{
@@ -12,6 +16,6 @@ func FuzzSVG(f *testing.F) {
 		f.Add([]byte(seed))
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_, _ = DecodeSVG(data, SVGOptions{MaxPixels: 1 << 18, MaxDimension: 1024, MaxNodes: 4096, MaxDepth: 64})
+		_, _ = software.DecodeSVG(data, software.SVGOptions{MaxPixels: 1 << 18, MaxDimension: 1024, MaxNodes: 4096, MaxDepth: 64})
 	})
 }

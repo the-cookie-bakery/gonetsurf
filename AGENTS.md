@@ -10,6 +10,9 @@ make conformance                        # specification conformance suites only
 make fuzz FUZZTIME=30s                  # short fuzz runs for the parser packages
 make bench                              # parser benchmarks
 make corpus-refresh                     # re-download and regenerate vendored corpora
+make shaders                            # compile Vulkan GLSL to gitignored SPIR-V
+make vulkan-build                       # optional cgo + -tags vulkan build
+make vulkan-test                        # optional Vulkan-tagged tests
 
 go build ./...                          # compile everything
 go vet ./...                            # static checks

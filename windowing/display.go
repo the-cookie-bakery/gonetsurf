@@ -7,7 +7,7 @@ import (
 	"context"
 	"image"
 
-	"gonetsurf/rendering"
+	"gonetsurf/rendering/interfaces"
 )
 
 // Display is a platform connection that can open one or more windows.
@@ -19,7 +19,7 @@ type Display interface {
 
 // Window presents a rendering surface and receives platform events.
 type Window interface {
-	Surface() *rendering.Surface
+	Surface() interfaces.Surface
 	Present(damage image.Rectangle) error
 	SetTitle(title string)
 	Size() (width, height int)

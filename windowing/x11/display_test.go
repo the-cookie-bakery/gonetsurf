@@ -8,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"gonetsurf/rendering"
+	"gonetsurf/rendering/geometry"
+	"gonetsurf/rendering/software"
 )
 
 func TestOpenDisplay(t *testing.T) {
@@ -21,7 +22,7 @@ func TestOpenDisplay(t *testing.T) {
 		t.Fatalf("Open: %v", err)
 	}
 	surface := window.Surface()
-	surface.Clear(rendering.NewColor(255, 0, 0))
+	surface.Clear(geometry.NewColor(255, 0, 0))
 	if err := window.Present(image.Rect(0, 0, 64, 48)); err != nil {
 		t.Fatalf("Present: %v", err)
 	}
@@ -47,7 +48,7 @@ func TestConfigureNotifyResize(t *testing.T) {
 		id:      1,
 		width:   64,
 		height:  48,
-		surface: rendering.NewSurface(64, 48),
+		surface: software.NewSurface(64, 48),
 	}
 	calledWidth := 0
 	calledHeight := 0
@@ -68,8 +69,8 @@ func TestConfigureNotifyResize(t *testing.T) {
 	if width, height := window.Size(); width != 100 || height != 80 {
 		t.Errorf("window size = %dx%d", width, height)
 	}
-	if window.Surface().Width != 100 || window.Surface().Height != 80 {
-		t.Errorf("surface size = %dx%d", window.Surface().Width, window.Surface().Height)
+	if width, height := window.Surface().Size(); width != 100 || height != 80 {
+		t.Errorf("surface size = %dx%d", width, height)
 	}
 }
 
@@ -79,7 +80,7 @@ func TestClientMessageClose(t *testing.T) {
 		id:      1,
 		width:   10,
 		height:  10,
-		surface: rendering.NewSurface(10, 10),
+		surface: software.NewSurface(10, 10),
 	}
 	packet := make([]byte, 32)
 	packet[0] = eventClientMessage
@@ -169,7 +170,7 @@ func TestMITSHMUpload(t *testing.T) {
 	}
 	surface := window.Surface()
 	time.Sleep(250 * time.Millisecond)
-	surface.Clear(rendering.NewColor(255, 0, 0))
+	surface.Clear(geometry.NewColor(255, 0, 0))
 	if err := window.Present(image.Rect(0, 0, 32, 32)); err != nil {
 		t.Fatalf("Present: %v", err)
 	}
@@ -205,12 +206,12 @@ func TestDamagePresentation(t *testing.T) {
 	defer display.Close()
 	surface := window.Surface()
 	time.Sleep(250 * time.Millisecond)
-	surface.Clear(rendering.NewColor(255, 0, 0))
+	surface.Clear(geometry.NewColor(255, 0, 0))
 	if err := window.Present(image.Rect(0, 0, 48, 48)); err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(50 * time.Millisecond)
-	surface.Clear(rendering.NewColor(0, 0, 255))
+	surface.Clear(geometry.NewColor(0, 0, 255))
 	if err := window.Present(image.Rect(0, 0, 16, 16)); err != nil {
 		t.Fatal(err)
 	}

@@ -16,7 +16,7 @@ html, body { margin:0; padding:0 }
 body { font-family: "AuthorTest"; font-size:20px; color:#000000 }
 </style></head><body><p>Author face renders</p></body></html>`
 	surface := renderTestPage(t, source, 240, 60)
-	if !hasNonWhitePixel(surface) {
+	if !hasNonWhitePixel(asSoftwareSurface(t, surface)) {
 		t.Fatal("author-font text did not paint")
 	}
 }
@@ -38,8 +38,11 @@ body { font-family: "LoaderFace"; font-size:20px; color:#000000 }
 			return goregular.TTF, nil
 		},
 	}
-	surface := RenderDocumentWithOptions(document, engine, 240, 60, options)
-	if !hasNonWhitePixel(surface) {
+	surface, renderErr := RenderDocumentWithOptions(document, engine, 240, 60, options)
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	if !hasNonWhitePixel(asSoftwareSurface(t, surface)) {
 		t.Fatal("loaded font text did not paint")
 	}
 }

@@ -2,8 +2,8 @@
 
 A privacy-preserving, pure-Go web browser engine.
 
-`gonetsurf` fetches, parses, styles, lays out, and paints web pages without cgo and
-without third-party runtime dependencies. It ships with a native X11 shell, headless
+`gonetsurf` fetches, parses, styles, lays out, and paints web pages. The default
+build is pure Go with no cgo and no third-party runtime dependencies. It ships with a native X11 shell, headless
 rendering tools, a network/storage broker, and a specification-driven test suite.
 
 The engine is under active development. It is already usable for static pages; JavaScript,
@@ -73,7 +73,9 @@ shaping.
 - Linux for the interactive X11 shell
 - An X11 server and `DISPLAY` for `cmd/netsurf` and `netsurfctl show`
 
-No cgo is required.
+The default software renderer requires no cgo. The optional Vulkan renderer is
+built with `-tags vulkan`, requires cgo, the system Vulkan loader, and shader
+tooling (`glslc`, `spirv-val`). See [`rendering-refactor.md`](rendering-refactor.md).
 
 ## Quick start
 
@@ -230,3 +232,4 @@ snapshots. Refresh them with `sh specifications/update.sh`.
 - Run `make compliance-tests` before opening a pull request.
 - Add fuzz targets and benchmarks when introducing a new parser or hot path.
 - Do not add third-party runtime dependencies.
+- Keep the default build cgo-free; optional backends use build tags.

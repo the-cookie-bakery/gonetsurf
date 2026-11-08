@@ -6,9 +6,12 @@
 GO ?= go
 FUZZTIME ?= 10s
 BENCHTIME ?= 100x
-FORMAT_DIRS := cmd urls parsers protocols caches storages internal dom styles layouts rendering windowing browsers ipc runtime brokers shells adapters
+GO_FILES := $(shell git ls-files '*.go' | while read -r file; do [ -f "$$file" ] && echo "$$file"; done)
+SHADER_DIR := rendering/vulkan/shaders
+SHADER_SOURCES := $(wildcard $(SHADER_DIR)/*.vert $(SHADER_DIR)/*.frag $(SHADER_DIR)/*.comp)
+SHADER_TARGETS := $(SHADER_SOURCES:%=%.spv)
 
-.PHONY: all build vet fmt fmt-check deps-check test conformance compliance-tests fuzz bench corpus-refresh spec-refresh clean
+.PHONY: all build vet fmt fmt-check deps-check test conformance compliance-tests fuzz bench corpus-refresh spec-refresh clean shaders vulkan-build vulkan-test vulkan-bench
 
 all: compliance-tests
 
@@ -19,10 +22,10 @@ vet:
 	$(GO) vet ./...
 
 fmt:
-	gofmt -w $(FORMAT_DIRS)
+	gofmt -w $(GO_FILES)
 
 fmt-check:
-	@unformatted="$$(gofmt -l $(FORMAT_DIRS))"; \
+	@unformatted="$$(gofmt -l $(GO_FILES))"; \
 	if [ -n "$$unformatted" ]; then echo "unformatted files:"; echo "$$unformatted"; exit 1; fi
 
 deps-check:
@@ -86,5 +89,30 @@ corpus-refresh:
 spec-refresh:
 	REFRESH=1 sh specifications/update.sh
 
+shaders: $(SHADER_TARGETS)
+
+$(SHADER_DIR)/%.vert.spv: $(SHADER_DIR)/%.vert
+	glslc -fshader-stage=vert "$<" -o "$@"
+	spirv-val "$@"
+
+$(SHADER_DIR)/%.frag.spv: $(SHADER_DIR)/%.frag
+	glslc -fshader-stage=frag "$<" -o "$@"
+	spirv-val "$@"
+
+$(SHADER_DIR)/%.comp.spv: $(SHADER_DIR)/%.comp
+	glslc -fshader-stage=comp "$<" -o "$@"
+	spirv-val "$@"
+
+# The Vulkan backend is optional and requires cgo plus the system Vulkan loader.
+vulkan-build: shaders
+	CGO_ENABLED=1 $(GO) build -tags vulkan ./...
+
+vulkan-test: shaders
+	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... -count=1
+
+vulkan-bench: shaders
+	CGO_ENABLED=1 $(GO) test -tags vulkan ./rendering/... -run=^$$ -bench=. -benchtime=$(BENCHTIME)
+
 clean:
 	$(GO) clean ./...
+	rm -f $(SHADER_TARGETS)

@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
 	"strings"
@@ -41,12 +42,12 @@ func NewPainter(images ImageProvider) *Painter {
 
 // Paint paints a laid-out box tree onto surface. The caller owns clearing the
 // surface; Paint draws shadows, backgrounds, borders, and text in tree order.
-func Paint(root *layouts.Box, surface *Surface) {
+func Paint(root *layouts.Box, surface interfaces.Canvas) {
 	NewPainter(DataURLImageProvider{}).Paint(root, surface)
 }
 
 // Paint paints root onto surface.
-func (painter *Painter) Paint(root *layouts.Box, surface *Surface) {
+func (painter *Painter) Paint(root *layouts.Box, surface interfaces.Canvas) {
 	if root == nil || surface == nil {
 		return
 	}
@@ -99,7 +100,7 @@ func borderVisible(side borderSide) bool {
 	return side.width > 0 && side.style != "" && side.style != "none" && side.style != "hidden"
 }
 
-func paintBorders(box *layouts.Box, surface *Surface, xPos, yPos float64) {
+func paintBorders(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if box.Style == nil {
 		return
 	}
@@ -126,7 +127,7 @@ func paintBorders(box *layouts.Box, surface *Surface, xPos, yPos float64) {
 	paintRoundedBorders(surface, xPos, yPos, box.Width, box.Height, sides, radii)
 }
 
-func paintRectBorders(surface *Surface, xPos, yPos, width, height float64, sides [4]borderSide) {
+func paintRectBorders(surface interfaces.Canvas, xPos, yPos, width, height float64, sides [4]borderSide) {
 	top := sides[0].width
 	right := sides[1].width
 	bottom := sides[2].width
@@ -138,7 +139,7 @@ func paintRectBorders(surface *Surface, xPos, yPos, width, height float64, sides
 	paintBorderRectangle(surface, sides[1], "right", Rect{X: xPos + width - right, Y: yPos + top, Width: right, Height: math.Max(0, height-top-bottom)})
 }
 
-func paintBorderRectangle(surface *Surface, side borderSide, name string, rect Rect) {
+func paintBorderRectangle(surface interfaces.Canvas, side borderSide, name string, rect Rect) {
 	if !borderVisible(side) || rect.Width <= 0 || rect.Height <= 0 {
 		return
 	}
@@ -155,7 +156,7 @@ func paintBorderRectangle(surface *Surface, side borderSide, name string, rect R
 	}
 }
 
-func paintDoubleBorder(surface *Surface, rect Rect, name string, thickness float64, color Color) {
+func paintDoubleBorder(surface interfaces.Canvas, rect Rect, name string, thickness float64, color Color) {
 	band := thickness / 3
 	if name == "top" {
 		surface.FillRect(Rect{X: rect.X, Y: rect.Y, Width: rect.Width, Height: band}, color)
@@ -171,7 +172,7 @@ func paintDoubleBorder(surface *Surface, rect Rect, name string, thickness float
 	surface.FillRect(Rect{X: rect.X + rect.Width - band, Y: rect.Y, Width: band, Height: rect.Height}, color)
 }
 
-func paintDashedBorder(surface *Surface, rect Rect, name string, thickness, dashLength, gapLength float64, color Color) {
+func paintDashedBorder(surface interfaces.Canvas, rect Rect, name string, thickness, dashLength, gapLength float64, color Color) {
 	period := dashLength + gapLength
 	if period <= 0 {
 		return
@@ -190,11 +191,11 @@ func paintDashedBorder(surface *Surface, rect Rect, name string, thickness, dash
 	}
 }
 
-func paintRoundedBorders(surface *Surface, xPos, yPos, width, height float64, sides [4]borderSide, radii CornerRadii) {
+func paintRoundedBorders(surface interfaces.Canvas, xPos, yPos, width, height float64, sides [4]borderSide, radii CornerRadii) {
 	outer := Rect{X: xPos, Y: yPos, Width: width, Height: height}
 	outerPath := NewPath()
 	outerPath.AddRoundedRect(outer, radii)
-	outerMask := RasterizeFill(outerPath, surface.Width, surface.Height, NonZeroFill)
+	outerMask := RasterizeFill(outerPath, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 
 	insets := boxInsets{Top: sides[0].width, Right: sides[1].width, Bottom: sides[2].width, Left: sides[3].width}
 	innerRect := Rect{
@@ -204,17 +205,17 @@ func paintRoundedBorders(surface *Surface, xPos, yPos, width, height float64, si
 		Height: math.Max(0, height-insets.Top-insets.Bottom),
 	}
 	innerRadii := insetRadii(radii, insets)
-	innerMask := NewMask(surface.Width, surface.Height)
+	innerMask := NewMask(surface.CanvasWidth(), surface.CanvasHeight())
 	if innerRect.Width > 0 && innerRect.Height > 0 {
 		innerPath := NewPath()
 		innerPath.AddRoundedRect(innerRect, innerRadii)
-		innerMask = RasterizeFill(innerPath, surface.Width, surface.Height, NonZeroFill)
+		innerMask = RasterizeFill(innerPath, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 	}
 
 	minX := int(math.Max(0, math.Floor(xPos)))
 	minY := int(math.Max(0, math.Floor(yPos)))
-	maxX := int(math.Min(float64(surface.Width), math.Ceil(xPos+width)))
-	maxY := int(math.Min(float64(surface.Height), math.Ceil(yPos+height)))
+	maxX := int(math.Min(float64(surface.CanvasWidth()), math.Ceil(xPos+width)))
+	maxY := int(math.Min(float64(surface.CanvasHeight()), math.Ceil(yPos+height)))
 	for yPixel := minY; yPixel < maxY; yPixel++ {
 		for xPixel := minX; xPixel < maxX; xPixel++ {
 			ring := outerMask.At(xPixel, yPixel) * (1 - innerMask.At(xPixel, yPixel))
@@ -251,7 +252,7 @@ func paintRoundedBorders(surface *Surface, xPos, yPos, width, height float64, si
 				}
 			}
 			if coverage > 0 {
-				surface.blendPixel(xPixel, yPixel, color, coverage)
+				surface.BlendPixel(xPixel, yPixel, color, coverage)
 			}
 		}
 	}
@@ -370,7 +371,7 @@ func (painter *Painter) cachedRuneFace(spec fonts.Spec, faces []font.Face, chara
 	return face
 }
 
-func (painter *Painter) paintText(box *layouts.Box, surface *Surface, offsetX, offsetY float64) {
+func (painter *Painter) paintText(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	text := box.VisualText
 	if text == "" {
 		text = box.Text
@@ -465,22 +466,11 @@ func (painter *Painter) paintText(box *layouts.Box, surface *Surface, offsetX, o
 	}
 }
 
-func drawCachedGlyph(surface *Surface, glyph fonts.CachedGlyph, dotX, dotY int, color Color) {
+func drawCachedGlyph(surface interfaces.Canvas, glyph fonts.CachedGlyph, dotX, dotY int, color Color) {
 	if glyph.Mask == nil {
 		return
 	}
-	maskBounds := glyph.Mask.Bounds()
-	for maskY := maskBounds.Min.Y; maskY < maskBounds.Max.Y; maskY++ {
-		for maskX := maskBounds.Min.X; maskX < maskBounds.Max.X; maskX++ {
-			alpha := glyph.Mask.AlphaAt(maskX, maskY).A
-			if alpha == 0 {
-				continue
-			}
-			destinationX := dotX + glyph.Bounds.Min.X + (maskX - maskBounds.Min.X)
-			destinationY := dotY + glyph.Bounds.Min.Y + (maskY - maskBounds.Min.Y)
-			surface.blendPixel(destinationX, destinationY, color, float64(alpha)/255)
-		}
-	}
+	surface.DrawGlyphMask(glyph.Mask, dotX+glyph.Bounds.Min.X, dotY+glyph.Bounds.Min.Y, color)
 }
 
 func maxFloat(first, second float64) float64 {

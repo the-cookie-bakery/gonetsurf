@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"math"
 	"strings"
 
@@ -103,7 +104,7 @@ func parseBoxShadows(style *styles.Style) []boxShadow {
 	return shadows
 }
 
-func (painter *Painter) paintOuterShadows(box *layouts.Box, surface *Surface, xPos, yPos float64) {
+func (painter *Painter) paintOuterShadows(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	shadows := parseBoxShadows(box.Style)
 	if len(shadows) == 0 {
 		return
@@ -129,7 +130,7 @@ func (painter *Painter) paintOuterShadows(box *layouts.Box, surface *Surface, xP
 		}
 		path := NewPath()
 		path.AddRoundedRect(rect, expandRadii(radii, shadow.spread))
-		mask := RasterizeFill(path, surface.Width, surface.Height, NonZeroFill)
+		mask := RasterizeFill(path, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 		if shadow.blur > 0 {
 			mask = BlurMask(mask, shadow.blur)
 		}
@@ -137,7 +138,7 @@ func (painter *Painter) paintOuterShadows(box *layouts.Box, surface *Surface, xP
 	}
 }
 
-func (painter *Painter) paintInnerShadows(box *layouts.Box, surface *Surface, xPos, yPos float64) {
+func (painter *Painter) paintInnerShadows(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	shadows := parseBoxShadows(box.Style)
 	if len(shadows) == 0 {
 		return
@@ -150,7 +151,7 @@ func (painter *Painter) paintInnerShadows(box *layouts.Box, surface *Surface, xP
 	outerRect := Rect{X: xPos, Y: yPos, Width: box.Width, Height: box.Height}
 	outerPath := NewPath()
 	outerPath.AddRoundedRect(outerRect, radii)
-	outerMask := RasterizeFill(outerPath, surface.Width, surface.Height, NonZeroFill)
+	outerMask := RasterizeFill(outerPath, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 
 	for index := len(shadows) - 1; index >= 0; index-- {
 		shadow := shadows[index]
@@ -168,11 +169,11 @@ func (painter *Painter) paintInnerShadows(box *layouts.Box, surface *Surface, xP
 		}
 		path := NewPath()
 		path.AddRoundedRect(rect, expandRadii(radii, -shadow.spread))
-		shadowMask := RasterizeFill(path, surface.Width, surface.Height, NonZeroFill)
-		ring := NewMask(surface.Width, surface.Height)
-		for yPixel := 0; yPixel < surface.Height; yPixel++ {
-			for xPixel := 0; xPixel < surface.Width; xPixel++ {
-				index := yPixel*surface.Width + xPixel
+		shadowMask := RasterizeFill(path, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
+		ring := NewMask(surface.CanvasWidth(), surface.CanvasHeight())
+		for yPixel := 0; yPixel < surface.CanvasHeight(); yPixel++ {
+			for xPixel := 0; xPixel < surface.CanvasWidth(); xPixel++ {
+				index := yPixel*surface.CanvasWidth() + xPixel
 				ring.Coverage[index] = outerMask.Coverage[index] * (1 - shadowMask.Coverage[index])
 			}
 		}

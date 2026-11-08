@@ -15,7 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"gonetsurf/rendering"
+	"gonetsurf/rendering/interfaces"
+	"gonetsurf/rendering/software"
 	"gonetsurf/windowing"
 )
 
@@ -176,7 +177,7 @@ func (display *Display) Open() (windowing.Window, error) {
 		width:            width,
 		height:           height,
 		title:            display.options.Title,
-		surface:          rendering.NewSurface(width, height),
+		surface:          software.NewSurface(width, height),
 		events:           make(chan windowing.Event, 64),
 		clipboardPending: make(map[uint32]chan string),
 	}
@@ -324,7 +325,7 @@ type Window struct {
 	width         int
 	height        int
 	title         string
-	surface       *rendering.Surface
+	surface       *software.Surface
 	resizeHandler func(width, height int)
 
 	events chan windowing.Event
@@ -336,7 +337,7 @@ type Window struct {
 }
 
 // Surface returns the window's rendering surface.
-func (window *Window) Surface() *rendering.Surface {
+func (window *Window) Surface() interfaces.Surface {
 	window.mutex.Lock()
 	defer window.mutex.Unlock()
 	return window.surface
@@ -511,7 +512,7 @@ func (window *Window) handleEvent(packet []byte) (bool, error) {
 		if resized {
 			window.width = width
 			window.height = height
-			window.surface = rendering.NewSurface(width, height)
+			window.surface = software.NewSurface(width, height)
 			window.display.resizeSHM(width, height)
 		}
 		window.mutex.Unlock()

@@ -1,12 +1,6 @@
-package rendering
+package geometry
 
 import "math"
-
-// Point is a position in surface coordinates.
-type Point struct {
-	X float64
-	Y float64
-}
 
 type pathVerb uint8
 
@@ -117,7 +111,7 @@ func (path *Path) AddRoundedRect(rect Rect, radii CornerRadii) {
 	if rect.Width <= 0 || rect.Height <= 0 {
 		return
 	}
-	radii = normalizeRadii(rect, radii)
+	radii = NormalizeRadii(rect, radii)
 	if radii.TopLeft.X == 0 && radii.TopRight.X == 0 && radii.BottomRight.X == 0 && radii.BottomLeft.X == 0 &&
 		radii.TopLeft.Y == 0 && radii.TopRight.Y == 0 && radii.BottomRight.Y == 0 && radii.BottomLeft.Y == 0 {
 		path.AddRect(rect)
@@ -155,7 +149,8 @@ func (path *Path) AddRoundedRect(rect Rect, radii CornerRadii) {
 	path.Close()
 }
 
-func normalizeRadii(rect Rect, radii CornerRadii) CornerRadii {
+// NormalizeRadii clamps and scales corner radii to fit a rectangle.
+func NormalizeRadii(rect Rect, radii CornerRadii) CornerRadii {
 	clamp := func(radius Point) Point {
 		return Point{X: math.Max(0, radius.X), Y: math.Max(0, radius.Y)}
 	}
@@ -169,71 +164,68 @@ func normalizeRadii(rect Rect, radii CornerRadii) CornerRadii {
 	scale = math.Min(scale, rect.Height/(radii.TopLeft.Y+radii.BottomLeft.Y))
 	scale = math.Min(scale, rect.Height/(radii.TopRight.Y+radii.BottomRight.Y))
 	if scale < 1 {
-		radii.TopLeft = radii.TopLeft.scaled(scale)
-		radii.TopRight = radii.TopRight.scaled(scale)
-		radii.BottomRight = radii.BottomRight.scaled(scale)
-		radii.BottomLeft = radii.BottomLeft.scaled(scale)
+		radii.TopLeft = radii.TopLeft.Scaled(scale)
+		radii.TopRight = radii.TopRight.Scaled(scale)
+		radii.BottomRight = radii.BottomRight.Scaled(scale)
+		radii.BottomLeft = radii.BottomLeft.Scaled(scale)
 	}
 	return radii
 }
 
-type flattenedSubpath struct {
-	points []Point
-	closed bool
+// Subpath is a flattened path subpath.
+type Subpath struct {
+	Points []Point
+	Closed bool
 }
 
-func (path *Path) flatten(tolerance float64) []flattenedSubpath {
+// Flatten converts the path into line segments.
+func (path *Path) Flatten(tolerance float64) []Subpath {
 	if tolerance <= 0 {
 		tolerance = 0.25
 	}
-	var subpaths []flattenedSubpath
+	var subpaths []Subpath
 	var current []Point
 	closed := false
 	flush := func() {
 		if len(current) > 0 {
-			subpaths = append(subpaths, flattenedSubpath{points: current, closed: closed})
+			subpaths = append(subpaths, Subpath{Points: current, Closed: closed})
 		}
 		current = nil
 		closed = false
 	}
 
 	pointIndex := 0
+	currentPoint := Point{}
+	startPoint := Point{}
 	for _, verb := range path.verbs {
 		switch verb {
 		case moveToVerb:
 			flush()
-			current = append(current, path.points[pointIndex])
+			currentPoint = path.points[pointIndex]
+			startPoint = currentPoint
+			current = append(current, currentPoint)
 			pointIndex++
 		case lineToVerb:
-			point := path.points[pointIndex]
+			currentPoint = path.points[pointIndex]
+			current = append(current, currentPoint)
 			pointIndex++
-			if len(current) == 0 {
-				current = append(current, point)
-			} else {
-				current = append(current, point)
-			}
 		case quadToVerb:
 			control := path.points[pointIndex]
 			end := path.points[pointIndex+1]
+			current = flattenQuad(current, currentPoint, control, end, tolerance, 0)
+			currentPoint = end
 			pointIndex += 2
-			if len(current) == 0 {
-				current = append(current, control)
-			}
-			start := current[len(current)-1]
-			current = flattenQuad(current, start, control, end, tolerance, 0)
 		case cubicToVerb:
 			control1 := path.points[pointIndex]
 			control2 := path.points[pointIndex+1]
 			end := path.points[pointIndex+2]
+			current = flattenCubic(current, currentPoint, control1, control2, end, tolerance, 0)
+			currentPoint = end
 			pointIndex += 3
-			if len(current) == 0 {
-				current = append(current, control1)
-			}
-			start := current[len(current)-1]
-			current = flattenCubic(current, start, control1, control2, end, tolerance, 0)
 		case closeVerb:
 			if len(current) > 0 {
 				closed = true
+				currentPoint = startPoint
 				flush()
 			}
 		}
@@ -242,15 +234,65 @@ func (path *Path) flatten(tolerance float64) []flattenedSubpath {
 	return subpaths
 }
 
+// Bounds returns the tight bounding box of the path's control points.
+func (path *Path) Bounds() Rect {
+	if path == nil || len(path.points) == 0 {
+		return Rect{}
+	}
+	minX := path.points[0].X
+	minY := path.points[0].Y
+	maxX := minX
+	maxY := minY
+	for _, point := range path.points[1:] {
+		minX = math.Min(minX, point.X)
+		minY = math.Min(minY, point.Y)
+		maxX = math.Max(maxX, point.X)
+		maxY = math.Max(maxY, point.Y)
+	}
+	return Rect{X: minX, Y: minY, Width: maxX - minX, Height: maxY - minY}
+}
+
+// Transform returns a copy of the path with the affine transformation applied.
+func (path *Path) Transform(matrix Affine) *Path {
+	transformed := &Path{}
+	pointIndex := 0
+	for _, verb := range path.verbs {
+		switch verb {
+		case moveToVerb:
+			point := matrix.Apply(path.points[pointIndex])
+			transformed.MoveTo(point.X, point.Y)
+			pointIndex++
+		case lineToVerb:
+			point := matrix.Apply(path.points[pointIndex])
+			transformed.LineTo(point.X, point.Y)
+			pointIndex++
+		case quadToVerb:
+			control := matrix.Apply(path.points[pointIndex])
+			end := matrix.Apply(path.points[pointIndex+1])
+			transformed.QuadTo(control.X, control.Y, end.X, end.Y)
+			pointIndex += 2
+		case cubicToVerb:
+			control1 := matrix.Apply(path.points[pointIndex])
+			control2 := matrix.Apply(path.points[pointIndex+1])
+			end := matrix.Apply(path.points[pointIndex+2])
+			transformed.CubicTo(control1.X, control1.Y, control2.X, control2.Y, end.X, end.Y)
+			pointIndex += 3
+		case closeVerb:
+			transformed.Close()
+		}
+	}
+	return transformed
+}
+
 func flattenQuad(points []Point, start, control, end Point, tolerance float64, depth int) []Point {
 	if depth >= 20 || distanceToLine(control, start, end) <= tolerance {
 		return append(points, end)
 	}
-	startControl := midpoint(start, control)
-	controlEnd := midpoint(control, end)
-	middle := midpoint(startControl, controlEnd)
-	points = flattenQuad(points, start, startControl, middle, tolerance, depth+1)
-	return flattenQuad(points, middle, controlEnd, end, tolerance, depth+1)
+	left := midpoint(start, control)
+	right := midpoint(control, end)
+	center := midpoint(left, right)
+	points = flattenQuad(points, start, left, center, tolerance, depth+1)
+	return flattenQuad(points, center, right, end, tolerance, depth+1)
 }
 
 func flattenCubic(points []Point, start, control1, control2, end Point, tolerance float64, depth int) []Point {
@@ -276,15 +318,10 @@ func midpoint(first, second Point) Point {
 }
 
 func distanceToLine(point, start, end Point) float64 {
-	deltaX := end.X - start.X
-	deltaY := end.Y - start.Y
-	lengthSquared := deltaX*deltaX + deltaY*deltaY
-	if lengthSquared == 0 {
-		return math.Hypot(point.X-start.X, point.Y-start.Y)
+	direction := end.Subtract(start)
+	length := direction.Length()
+	if length == 0 {
+		return point.Subtract(start).Length()
 	}
-	projection := ((point.X-start.X)*deltaX + (point.Y-start.Y)*deltaY) / lengthSquared
-	projection = math.Max(0, math.Min(1, projection))
-	closestX := start.X + projection*deltaX
-	closestY := start.Y + projection*deltaY
-	return math.Hypot(point.X-closestX, point.Y-closestY)
+	return math.Abs(CrossProduct(direction, point.Subtract(start))) / length
 }

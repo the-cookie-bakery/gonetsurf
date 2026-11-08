@@ -1,48 +1,23 @@
-package rendering
+package software
 
-// CompositeOp is a Porter-Duff compositing operator.
-type CompositeOp uint8
-
-const (
-	// SourceOver places the source over the destination.
-	SourceOver CompositeOp = iota
-	// SourceIn keeps the source inside the destination alpha.
-	SourceIn
-	// SourceOut keeps the source outside the destination alpha.
-	SourceOut
-	// SourceAtop places the source over the destination, clipped to it.
-	SourceAtop
-	// DestinationOver places the destination over the source.
-	DestinationOver
-	// DestinationIn keeps the destination inside the source alpha.
-	DestinationIn
-	// DestinationOut keeps the destination outside the source alpha.
-	DestinationOut
-	// DestinationAtop places the destination over the source, clipped to it.
-	DestinationAtop
-	// Xor keeps the non-overlapping parts of both images.
-	Xor
-	// Clear clears the destination.
-	Clear
-	// Copy replaces the destination with the source.
-	Copy
-)
+import "gonetsurf/rendering/interfaces"
 
 // Blit composites source onto the surface at the given offset.
-func (surface *Surface) Blit(offsetX, offsetY int, source *Surface, op CompositeOp) {
-	if source == nil {
+func (surface *Surface) Blit(offsetX, offsetY int, source interfaces.Surface, op CompositeOp) {
+	sourceSurface := asSoftwareSurface(source)
+	if sourceSurface == nil {
 		return
 	}
 	if op == Copy {
-		blitCopy(surface, offsetX, offsetY, source)
+		blitCopy(surface, offsetX, offsetY, sourceSurface)
 		return
 	}
-	for sourceY := 0; sourceY < source.Height; sourceY++ {
+	for sourceY := 0; sourceY < sourceSurface.Height; sourceY++ {
 		destinationY := offsetY + sourceY
 		if destinationY < 0 || destinationY >= surface.Height {
 			continue
 		}
-		for sourceX := 0; sourceX < source.Width; sourceX++ {
+		for sourceX := 0; sourceX < sourceSurface.Width; sourceX++ {
 			destinationX := offsetX + sourceX
 			if destinationX < 0 || destinationX >= surface.Width {
 				continue
@@ -50,9 +25,9 @@ func (surface *Surface) Blit(offsetX, offsetY int, source *Surface, op Composite
 			if !pointInRect(float64(destinationX)+0.5, float64(destinationY)+0.5, surface.clip) {
 				continue
 			}
-			sourceOffset := sourceY*source.Stride + sourceX*4
+			sourceOffset := sourceY*sourceSurface.Stride + sourceX*4
 			destinationOffset := destinationY*surface.Stride + destinationX*4
-			compositePixel(surface.Pix, destinationOffset, source.Pix, sourceOffset, op)
+			compositePixel(surface.Pix, destinationOffset, sourceSurface.Pix, sourceOffset, op)
 		}
 	}
 }
@@ -144,19 +119,20 @@ func pointInRect(xPos, yPos float64, rect Rect) bool {
 }
 
 // BlitOpacity composites source onto the surface with a global opacity.
-func (surface *Surface) BlitOpacity(offsetX, offsetY int, source *Surface, opacity float64) {
-	if source == nil || opacity <= 0 {
+func (surface *Surface) BlitOpacity(offsetX, offsetY int, source interfaces.Surface, opacity float64) {
+	sourceSurface := asSoftwareSurface(source)
+	if sourceSurface == nil || opacity <= 0 {
 		return
 	}
 	if opacity > 1 {
 		opacity = 1
 	}
-	for sourceY := 0; sourceY < source.Height; sourceY++ {
+	for sourceY := 0; sourceY < sourceSurface.Height; sourceY++ {
 		destinationY := offsetY + sourceY
 		if destinationY < 0 || destinationY >= surface.Height {
 			continue
 		}
-		for sourceX := 0; sourceX < source.Width; sourceX++ {
+		for sourceX := 0; sourceX < sourceSurface.Width; sourceX++ {
 			destinationX := offsetX + sourceX
 			if destinationX < 0 || destinationX >= surface.Width {
 				continue
@@ -164,17 +140,50 @@ func (surface *Surface) BlitOpacity(offsetX, offsetY int, source *Surface, opaci
 			if !pointInRect(float64(destinationX)+0.5, float64(destinationY)+0.5, surface.clip) {
 				continue
 			}
-			sourceOffset := sourceY*source.Stride + sourceX*4
+			sourceOffset := sourceY*sourceSurface.Stride + sourceX*4
 			destinationOffset := destinationY*surface.Stride + destinationX*4
-			sourceAlpha := float64(source.Pix[sourceOffset+3]) / 255 * opacity
+			sourceAlpha := float64(sourceSurface.Pix[sourceOffset+3]) / 255 * opacity
 			if sourceAlpha <= 0 {
 				continue
 			}
 			destinationAlpha := float64(surface.Pix[destinationOffset+3]) / 255
-			surface.Pix[destinationOffset] = toByte(float64(source.Pix[sourceOffset])/255*opacity + float64(surface.Pix[destinationOffset])/255*(1-sourceAlpha))
-			surface.Pix[destinationOffset+1] = toByte(float64(source.Pix[sourceOffset+1])/255*opacity + float64(surface.Pix[destinationOffset+1])/255*(1-sourceAlpha))
-			surface.Pix[destinationOffset+2] = toByte(float64(source.Pix[sourceOffset+2])/255*opacity + float64(surface.Pix[destinationOffset+2])/255*(1-sourceAlpha))
+			surface.Pix[destinationOffset] = toByte(float64(sourceSurface.Pix[sourceOffset])/255*opacity + float64(surface.Pix[destinationOffset])/255*(1-sourceAlpha))
+			surface.Pix[destinationOffset+1] = toByte(float64(sourceSurface.Pix[sourceOffset+1])/255*opacity + float64(surface.Pix[destinationOffset+1])/255*(1-sourceAlpha))
+			surface.Pix[destinationOffset+2] = toByte(float64(sourceSurface.Pix[sourceOffset+2])/255*opacity + float64(surface.Pix[destinationOffset+2])/255*(1-sourceAlpha))
 			surface.Pix[destinationOffset+3] = toByte(sourceAlpha + destinationAlpha*(1-sourceAlpha))
 		}
 	}
+}
+
+func asSoftwareSurface(source interfaces.Surface) *Surface {
+	if source == nil {
+		return nil
+	}
+	if softwareSurface, ok := source.(*Surface); ok {
+		return softwareSurface
+	}
+	converted := source.Image()
+	if converted == nil {
+		return nil
+	}
+	bounds := converted.Bounds()
+	surface := NewSurface(bounds.Dx(), bounds.Dy())
+	for yPos := 0; yPos < bounds.Dy(); yPos++ {
+		for xPos := 0; xPos < bounds.Dx(); xPos++ {
+			sourceOffset := (bounds.Min.Y+yPos)*converted.Stride + (bounds.Min.X+xPos)*4
+			color := Color{
+				Red:   converted.Pix[sourceOffset],
+				Green: converted.Pix[sourceOffset+1],
+				Blue:  converted.Pix[sourceOffset+2],
+				Alpha: converted.Pix[sourceOffset+3],
+			}
+			red, green, blue, alpha := color.Premultiplied(1)
+			destinationOffset := yPos*surface.Stride + xPos*4
+			surface.Pix[destinationOffset] = red
+			surface.Pix[destinationOffset+1] = green
+			surface.Pix[destinationOffset+2] = blue
+			surface.Pix[destinationOffset+3] = alpha
+		}
+	}
+	return surface
 }

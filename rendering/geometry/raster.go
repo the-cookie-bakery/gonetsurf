@@ -1,59 +1,11 @@
-package rendering
+package geometry
 
 import (
 	"math"
 	"sort"
 )
 
-// FillRule selects how overlapping subpaths are filled.
-type FillRule uint8
-
-const (
-	// NonZeroFill fills regions with a nonzero winding number.
-	NonZeroFill FillRule = iota
-	// EvenOddFill fills regions with an odd crossing count.
-	EvenOddFill
-)
-
 const subSamples = 4
-
-// Mask is an anti-aliased coverage buffer. Each value is in [0, 1].
-type Mask struct {
-	Width    int
-	Height   int
-	Coverage []float64
-}
-
-// NewMask returns an empty coverage mask.
-func NewMask(width, height int) *Mask {
-	if width < 0 {
-		width = 0
-	}
-	if height < 0 {
-		height = 0
-	}
-	return &Mask{Width: width, Height: height, Coverage: make([]float64, width*height)}
-}
-
-// At returns the coverage at (xPos, yPos).
-func (mask *Mask) At(xPos, yPos int) float64 {
-	if mask == nil || xPos < 0 || yPos < 0 || xPos >= mask.Width || yPos >= mask.Height {
-		return 0
-	}
-	return mask.Coverage[yPos*mask.Width+xPos]
-}
-
-// Union combines other into mask using coverage composition.
-func (mask *Mask) Union(other *Mask) {
-	if mask == nil || other == nil || mask.Width != other.Width || mask.Height != other.Height {
-		return
-	}
-	for index := range mask.Coverage {
-		first := mask.Coverage[index]
-		second := other.Coverage[index]
-		mask.Coverage[index] = 1 - (1-first)*(1-second)
-	}
-}
 
 // RasterizeFill rasterizes path into a coverage mask.
 func RasterizeFill(path *Path, width, height int, rule FillRule) *Mask {
@@ -61,7 +13,7 @@ func RasterizeFill(path *Path, width, height int, rule FillRule) *Mask {
 	if path == nil {
 		return mask
 	}
-	edges := buildEdges(path.flatten(0.25))
+	edges := buildEdges(path.Flatten(0.25))
 	accumulateEdges(edges, mask, rule, false)
 	return mask
 }
@@ -93,10 +45,10 @@ func (list crossingList) Swap(first, second int) {
 	list[first], list[second] = list[second], list[first]
 }
 
-func buildEdges(subpaths []flattenedSubpath) []rasterEdge {
+func buildEdges(subpaths []Subpath) []rasterEdge {
 	var edges []rasterEdge
 	for _, subpath := range subpaths {
-		points := subpath.points
+		points := subpath.Points
 		if len(points) < 2 {
 			continue
 		}

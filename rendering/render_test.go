@@ -40,7 +40,11 @@ func TestRenderDocumentGolden(t *testing.T) {
 		}
 		return true
 	})
-	surface := RenderDocument(document, engine, 320, 200)
+	rendered, renderErr := RenderDocument(document, engine, 320, 200)
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	path := filepath.Join("testdata", "golden", "page.png")
 
 	if *updateGolden {
@@ -82,7 +86,11 @@ func TestRenderDocumentPixels(t *testing.T) {
 		}
 		return true
 	})
-	surface := RenderDocument(document, engine, 320, 200)
+	rendered, renderErr := RenderDocument(document, engine, 320, 200)
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 
 	background := surface.Pix[3]
 	if background != 255 {

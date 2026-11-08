@@ -19,6 +19,9 @@ import (
 	"gonetsurf/parsers/css/cssom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
+	"gonetsurf/rendering/geometry"
+	"gonetsurf/rendering/interfaces"
+	"gonetsurf/rendering/software"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
 	"gonetsurf/windowing"
@@ -65,8 +68,9 @@ type Shell struct {
 	pointerX    int
 	pointerY    int
 
-	page  *pageState
-	dirty bool
+	page     *pageState
+	Renderer interfaces.Renderer
+	dirty    bool
 
 	topBarCache    chromeCache
 	statusBarCache chromeCache
@@ -77,18 +81,22 @@ type chromeCache struct {
 	source  string
 	width   int
 	height  int
-	surface *rendering.Surface
+	surface interfaces.Surface
 }
 
-func (cache *chromeCache) render(source string, width, height int) *rendering.Surface {
+func (cache *chromeCache) render(source string, width, height int, renderer interfaces.Renderer) (interfaces.Surface, error) {
 	if cache.surface != nil && cache.source == source && cache.width == width && cache.height == height {
-		return cache.surface
+		return cache.surface, nil
 	}
 	cache.source = source
 	cache.width = width
 	cache.height = height
-	cache.surface = renderChrome(source, width, height)
-	return cache.surface
+	surface, err := renderChrome(source, width, height, renderer)
+	if err != nil {
+		return nil, err
+	}
+	cache.surface = surface
+	return cache.surface, nil
 }
 
 // New returns a shell with one blank tab and optional broker clients.
@@ -126,6 +134,11 @@ func (shell *Shell) MarkDirty() {
 	shell.dirty = true
 }
 
+// SetRenderer installs the rendering backend used for pages and chrome.
+func (shell *Shell) SetRenderer(renderer interfaces.Renderer) {
+	shell.Renderer = renderer
+}
+
 // Resize updates the viewport.
 func (shell *Shell) Resize(width, height int) {
 	if width <= 0 || height <= 0 {
@@ -137,8 +150,8 @@ func (shell *Shell) Resize(width, height int) {
 }
 
 // Render builds a frame with content, chrome, and the status bar.
-func (shell *Shell) Render() *rendering.Surface {
-	result := rendering.NewSurface(shell.Width, shell.Height)
+func (shell *Shell) Render() (interfaces.Surface, error) {
+	result := software.NewSurface(shell.Width, shell.Height)
 	result.Clear(rendering.NewColor(255, 255, 255))
 	contentHeight := shell.contentHeight()
 	if shell.page != nil && contentHeight > 0 {
@@ -146,25 +159,37 @@ func (shell *Shell) Render() *rendering.Surface {
 		if tab := shell.Browser.ActiveTab(); tab != nil {
 			shell.page.page.ScrollTo(tab.ScrollX, tab.ScrollY)
 		}
-		content := shell.page.page.Render()
+		content, err := shell.page.page.Render()
+		if err != nil {
+			return nil, err
+		}
 		if tab := shell.Browser.ActiveTab(); tab != nil {
 			tab.ScrollX, tab.ScrollY = shell.page.page.Scroll()
 		}
-		result.Blit(0, topBarHeight, content, rendering.Copy)
+		result.Blit(0, topBarHeight, content, geometry.Copy)
 	}
-	topBar := shell.topBarCache.render(shell.chromeHTML(), shell.Width, topBarHeight)
-	result.Blit(0, 0, topBar, rendering.Copy)
-	statusBar := shell.statusBarCache.render(shell.statusHTML(), shell.Width, statusBarHeight)
-	result.Blit(0, shell.Height-statusBarHeight, statusBar, rendering.Copy)
+	topBar, err := shell.topBarCache.render(shell.chromeHTML(), shell.Width, topBarHeight, shell.Renderer)
+	if err != nil {
+		return nil, err
+	}
+	result.Blit(0, 0, topBar, geometry.Copy)
+	statusBar, err := shell.statusBarCache.render(shell.statusHTML(), shell.Width, statusBarHeight, shell.Renderer)
+	if err != nil {
+		return nil, err
+	}
+	result.Blit(0, shell.Height-statusBarHeight, statusBar, geometry.Copy)
 	if shell.PrivacyOpen {
-		panel := shell.privacyCache.render(shell.privacyHTML(), privacyPanelWidth, privacyPanelHeight)
+		panel, err := shell.privacyCache.render(shell.privacyHTML(), privacyPanelWidth, privacyPanelHeight, shell.Renderer)
+		if err != nil {
+			return nil, err
+		}
 		panelX := shell.Width - privacyPanelWidth
 		if panelX < 0 {
 			panelX = 0
 		}
-		result.Blit(panelX, topBarHeight, panel, rendering.Copy)
+		result.Blit(panelX, topBarHeight, panel, geometry.Copy)
 	}
-	return result
+	return result, nil
 }
 
 func (shell *Shell) chromeHTML() string {
@@ -267,16 +292,16 @@ html, body { margin:0; padding:0; font-family:sans-serif; font-size:11px; color:
 </body></html>`
 }
 
-func renderChrome(source string, width, height int) *rendering.Surface {
+func renderChrome(source string, width, height int, renderer interfaces.Renderer) (interfaces.Surface, error) {
 	if width <= 0 || height <= 0 {
-		return rendering.NewSurface(width, height)
+		return software.NewSurface(width, height), nil
 	}
 	document, err := html.ParseString(source, html.ParseOptions{})
 	if err != nil {
-		return rendering.NewSurface(width, height)
+		return software.NewSurface(width, height), nil
 	}
 	engine := styleEngine(document)
-	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{})
+	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{Renderer: renderer})
 }
 
 func styleEngine(document *dom.Document) *styles.Engine {
@@ -336,8 +361,12 @@ func (shell *Shell) Run(ctx context.Context, window windowing.Window) error {
 }
 
 func (shell *Shell) present(window windowing.Window) {
-	surface := shell.Render()
-	window.Surface().Blit(0, 0, surface, rendering.Copy)
+	surface, err := shell.Render()
+	if err != nil {
+		shell.Error = err.Error()
+		return
+	}
+	window.Surface().Blit(0, 0, surface, geometry.Copy)
 	if err := window.Present(image.Rect(0, 0, shell.Width, shell.Height)); err != nil {
 		shell.Error = err.Error()
 	}
@@ -1262,6 +1291,7 @@ func (shell *Shell) resourceOptions(base, topLevel *urls.URL) rendering.Options 
 		return shell.fetchResource(resource, topLevel)
 	}
 	return rendering.Options{
+		Renderer: shell.Renderer,
 		Images: rendering.URLImageProvider{
 			Base:  base,
 			Fetch: loader,

@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"image"
 	"math"
 	"strings"
@@ -371,7 +372,7 @@ func parseCSSPixelValue(text string) (float64, bool) {
 	return length.value, true
 }
 
-func (painter *Painter) paintBackground(box *layouts.Box, surface *Surface, offsetX, offsetY float64) {
+func (painter *Painter) paintBackground(box *layouts.Box, surface interfaces.Canvas, offsetX, offsetY float64) {
 	if box.Style == nil || box.Kind == layouts.AnonymousBlockBox {
 		return
 	}
@@ -400,14 +401,14 @@ func (painter *Painter) paintBackground(box *layouts.Box, surface *Surface, offs
 	}
 }
 
-func (painter *Painter) paintBackgroundLayer(box *layouts.Box, surface *Surface, layer backgroundLayerPaint, radii CornerRadii, offsetX, offsetY, base float64) {
+func (painter *Painter) paintBackgroundLayer(box *layouts.Box, surface interfaces.Canvas, layer backgroundLayerPaint, radii CornerRadii, offsetX, offsetY, base float64) {
 	if layer.image == "" && layer.gradient == nil {
 		return
 	}
 	area := boxAreaRect(box, layer.origin, offsetX, offsetY, base)
 	clip := boxAreaRect(box, layer.clip, offsetX, offsetY, base)
 	if strings.EqualFold(layer.attachment, "fixed") {
-		area = Rect{Width: float64(surface.Width), Height: float64(surface.Height)}
+		area = Rect{Width: float64(surface.CanvasWidth()), Height: float64(surface.CanvasHeight())}
 	}
 	if area.Width <= 0 || area.Height <= 0 || clip.Width <= 0 || clip.Height <= 0 {
 		return
@@ -417,7 +418,7 @@ func (painter *Painter) paintBackgroundLayer(box *layouts.Box, surface *Surface,
 	if hasNonZeroRadii(clipRadii) {
 		path := NewPath()
 		path.AddRoundedRect(clip, clipRadii)
-		mask = RasterizeFill(path, surface.Width, surface.Height, NonZeroFill)
+		mask = RasterizeFill(path, surface.CanvasWidth(), surface.CanvasHeight(), NonZeroFill)
 	}
 	if layer.gradient != nil {
 		tileWidth := area.Width
@@ -662,7 +663,7 @@ func hasNonZeroRadii(radii CornerRadii) bool {
 		radii.BottomLeft.X > 0 || radii.BottomLeft.Y > 0
 }
 
-func fillRoundedArea(surface *Surface, rect Rect, radii CornerRadii, color Color) {
+func fillRoundedArea(surface interfaces.Canvas, rect Rect, radii CornerRadii, color Color) {
 	if rect.Width <= 0 || rect.Height <= 0 {
 		return
 	}

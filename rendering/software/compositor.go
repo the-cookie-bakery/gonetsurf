@@ -1,4 +1,4 @@
-package rendering
+package software
 
 import (
 	"image"
@@ -267,7 +267,7 @@ func (grid *TileGrid) Composite(destination *Surface) int {
 }
 
 func (surface *Surface) clearRect(rect Rect) {
-	rect = rect.intersect(surface.clip)
+	rect = rect.Intersect(surface.clip)
 	if rect.IsEmpty() {
 		return
 	}

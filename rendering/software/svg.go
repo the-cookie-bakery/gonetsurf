@@ -1,9 +1,10 @@
-package rendering
+package software
 
 import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"gonetsurf/rendering/geometry"
 	"image"
 	"math"
 	"sort"
@@ -71,7 +72,7 @@ func DecodeSVG(data []byte, options SVGOptions) (image.Image, error) {
 		return nil, fmt.Errorf("svg: pixel budget exceeded")
 	}
 
-	base := identityAffine
+	base := geometry.IdentityAffine()
 	if hasViewBox {
 		base = svgViewBoxMatrix(viewBox, Rect{Width: float64(pixelWidth), Height: float64(pixelHeight)}, svgAttribute(root, "preserveAspectRatio"))
 	}
@@ -211,13 +212,13 @@ func svgViewport(root *svgNode) (float64, float64, Rect, bool) {
 	return width, height, viewBox, hasViewBox
 }
 
-func svgViewBoxMatrix(viewBox Rect, viewport Rect, preserve string) affine {
+func svgViewBoxMatrix(viewBox Rect, viewport Rect, preserve string) geometry.Affine {
 	scaleX := viewport.Width / viewBox.Width
 	scaleY := viewport.Height / viewBox.Height
 	scale := math.Min(scaleX, scaleY)
 	align := strings.TrimSpace(preserve)
 	if strings.HasPrefix(align, "none") {
-		return translationAffine(-viewBox.X*scaleX, -viewBox.Y*scaleY).multiply(scaleAffine(scaleX, scaleY))
+		return geometry.TranslationAffine(-viewBox.X*scaleX, -viewBox.Y*scaleY).Multiply(geometry.ScaleAffine(scaleX, scaleY))
 	}
 	offsetX := (viewport.Width - viewBox.Width*scale) / 2
 	offsetY := (viewport.Height - viewBox.Height*scale) / 2
@@ -231,7 +232,7 @@ func svgViewBoxMatrix(viewBox Rect, viewport Rect, preserve string) affine {
 	} else if strings.Contains(align, "YMax") {
 		offsetY = viewport.Height - viewBox.Height*scale
 	}
-	return translationAffine(offsetX-viewBox.X*scale, offsetY-viewBox.Y*scale).multiply(scaleAffine(scale, scale))
+	return geometry.TranslationAffine(offsetX-viewBox.X*scale, offsetY-viewBox.Y*scale).Multiply(geometry.ScaleAffine(scale, scale))
 }
 
 type svgStyle struct {
@@ -255,13 +256,13 @@ type svgContext struct {
 	style      svgStyle
 }
 
-func (context svgContext) drawNode(node *svgNode, matrix affine, groupOpacity float64) {
+func (context svgContext) drawNode(node *svgNode, matrix geometry.Affine, groupOpacity float64) {
 	name := strings.ToLower(node.name.Local)
 	switch name {
 	case "svg", "g", "a":
 		style := context.styleFor(node, context.style)
 		local := context.transformFor(node, context.viewWidth, context.viewHeight)
-		nextMatrix := matrix.multiply(local)
+		nextMatrix := matrix.Multiply(local)
 		opacity := groupOpacity * style.opacity
 		for _, child := range node.children {
 			next := context
@@ -275,7 +276,7 @@ func (context svgContext) drawNode(node *svgNode, matrix affine, groupOpacity fl
 		if path == nil {
 			return
 		}
-		transformPath(path, matrix.multiply(local))
+		path = path.Transform(matrix.Multiply(local))
 		context.paintPath(path, style, groupOpacity*style.opacity)
 	case "defs", "title", "desc", "metadata", "script", "foreignObject", "symbol", "clipPath", "mask", "pattern", "marker", "style", "use":
 		return
@@ -363,17 +364,17 @@ func (context svgContext) paintPath(path *Path, style svgStyle, opacity float64)
 		if strings.HasPrefix(strings.ToLower(fill), "url(") {
 			if gradient := context.gradientFor(fill); gradient != nil {
 				mask := RasterizeFill(path, context.surface.Width, context.surface.Height, style.fillRule)
-				context.paintGradientMask(mask, gradient, pathBounds(path), style.fillOpacity*opacity)
+				context.paintGradientMask(mask, gradient, path.Bounds(), style.fillOpacity*opacity)
 			}
 		} else if color, ok := ParseColor(fill); ok {
-			color.Alpha = toByte(float64(color.Alpha) / 255 * style.fillOpacity * opacity)
+			color.Alpha = geometry.ToByte(float64(color.Alpha) / 255 * style.fillOpacity * opacity)
 			context.surface.FillPath(path, style.fillRule, color)
 		}
 	}
 	stroke := strings.TrimSpace(style.stroke)
 	if stroke != "" && !strings.EqualFold(stroke, "none") && style.strokeWidth > 0 {
 		if color, ok := ParseColor(stroke); ok {
-			color.Alpha = toByte(float64(color.Alpha) / 255 * style.strokeOpacity * opacity)
+			color.Alpha = geometry.ToByte(float64(color.Alpha) / 255 * style.strokeOpacity * opacity)
 			context.surface.StrokePath(path, StrokeStyle{
 				Width:      style.strokeWidth,
 				Cap:        style.lineCap,
@@ -420,10 +421,10 @@ func (context svgContext) paintGradientMask(mask *Mask, gradient *svgNode, bound
 	}
 	if gradientTransform, ok := gradient.attribute("gradientTransform"); ok {
 		transform := parseSVGTransform(gradientTransform, context.viewWidth, context.viewHeight)
-		start = transform.apply(start)
-		end = transform.apply(end)
-		center = transform.apply(center)
-		focal = transform.apply(focal)
+		start = transform.Apply(start)
+		end = transform.Apply(end)
+		center = transform.Apply(center)
+		focal = transform.Apply(focal)
 	}
 	minX := int(math.Max(0, math.Floor(bounds.X)))
 	minY := int(math.Max(0, math.Floor(bounds.Y)))
@@ -491,7 +492,7 @@ func svgGradientStops(gradient *svgNode, opacity float64) []resolvedGradientStop
 				}
 			}
 		}
-		color.Alpha = toByte(float64(color.Alpha) / 255 * stopOpacity * opacity)
+		color.Alpha = geometry.ToByte(float64(color.Alpha) / 255 * stopOpacity * opacity)
 		offset := 0.0
 		if value, ok := child.attribute("offset"); ok {
 			offset = svgFraction(value)
@@ -717,16 +718,16 @@ func parseSVGPoints(text string) ([]Point, bool) {
 	return points, true
 }
 
-func (context svgContext) transformFor(node *svgNode, width, height float64) affine {
+func (context svgContext) transformFor(node *svgNode, width, height float64) geometry.Affine {
 	value, ok := node.attribute("transform")
 	if !ok || strings.TrimSpace(value) == "" {
-		return identityAffine
+		return geometry.IdentityAffine()
 	}
 	return parseSVGTransform(value, width, height)
 }
 
-func parseSVGTransform(value string, width, height float64) affine {
-	matrix := identityAffine
+func parseSVGTransform(value string, width, height float64) geometry.Affine {
+	matrix := geometry.IdentityAffine()
 	values := parser.ParseComponentValueList(value)
 	box := &layouts.Box{Width: width, Height: height}
 	for _, item := range values {
@@ -744,40 +745,17 @@ func parseSVGTransform(value string, width, height float64) affine {
 			centerX, okX := transformLength(arguments, 1, width)
 			centerY, okY := transformLength(arguments, 2, height)
 			if okAngle && okX && okY {
-				next := translationAffine(centerX, centerY).multiply(rotationAffine(angle)).multiply(translationAffine(-centerX, -centerY))
-				matrix = matrix.multiply(next)
+				next := geometry.TranslationAffine(centerX, centerY).Multiply(geometry.RotationAffine(angle)).Multiply(geometry.TranslationAffine(-centerX, -centerY))
+				matrix = matrix.Multiply(next)
 			}
 			continue
 		}
 		next, ok := transformFunction(function, box)
 		if ok {
-			matrix = matrix.multiply(next)
+			matrix = matrix.Multiply(next)
 		}
 	}
 	return matrix
-}
-
-func transformPath(path *Path, matrix affine) {
-	for index := range path.points {
-		path.points[index] = matrix.apply(path.points[index])
-	}
-}
-
-func pathBounds(path *Path) Rect {
-	if path == nil || len(path.points) == 0 {
-		return Rect{}
-	}
-	minX := math.Inf(1)
-	minY := math.Inf(1)
-	maxX := math.Inf(-1)
-	maxY := math.Inf(-1)
-	for _, point := range path.points {
-		minX = math.Min(minX, point.X)
-		minY = math.Min(minY, point.Y)
-		maxX = math.Max(maxX, point.X)
-		maxY = math.Max(maxY, point.Y)
-	}
-	return Rect{X: minX, Y: minY, Width: maxX - minX, Height: maxY - minY}
 }
 
 func parseSVGPathData(path *Path, data string) bool {

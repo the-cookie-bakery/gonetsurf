@@ -23,17 +23,38 @@ import (
 	parsershtml "gonetsurf/parsers/html"
 	"gonetsurf/protocols/http1"
 	"gonetsurf/rendering"
+	"gonetsurf/rendering/backends"
 	"gonetsurf/rendering/fonts"
+	"gonetsurf/rendering/geometry"
+	"gonetsurf/rendering/interfaces"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
 	"gonetsurf/windowing/x11"
 )
+
+var activeRenderer interfaces.Renderer
 
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: netsurfctl <deps-check|urlparse|fetch|layout|render|show|reftest> [args]")
 		os.Exit(2)
 	}
+	arguments, rendererName, err := extractRenderer(os.Args[2:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
+		os.Exit(2)
+	}
+	backend, err := backends.Select(rendererName)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
+		os.Exit(2)
+	}
+	activeRenderer, err = backend.NewRenderer()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "netsurfctl:", err)
+		os.Exit(1)
+	}
+	defer activeRenderer.Close()
 	switch os.Args[1] {
 	case "deps-check":
 		if err := depsCheck(); err != nil {
@@ -42,32 +63,32 @@ func main() {
 		}
 		fmt.Println("deps-check: ok")
 	case "urlparse":
-		if err := urlParse(os.Args[2:]); err != nil {
+		if err := urlParse(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "urlparse failed:", err)
 			os.Exit(1)
 		}
 	case "fetch":
-		if err := fetch(os.Args[2:]); err != nil {
+		if err := fetch(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "fetch failed:", err)
 			os.Exit(1)
 		}
 	case "layout":
-		if err := layout(os.Args[2:]); err != nil {
+		if err := layout(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "layout failed:", err)
 			os.Exit(1)
 		}
 	case "render":
-		if err := render(os.Args[2:]); err != nil {
+		if err := render(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "render failed:", err)
 			os.Exit(1)
 		}
 	case "show":
-		if err := show(os.Args[2:]); err != nil {
+		if err := show(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "show failed:", err)
 			os.Exit(1)
 		}
 	case "reftest":
-		if err := reftestCommand(os.Args[2:]); err != nil {
+		if err := reftestCommand(arguments); err != nil {
 			fmt.Fprintln(os.Stderr, "reftest failed:", err)
 			os.Exit(1)
 		}
@@ -243,7 +264,10 @@ func render(arguments []string) error {
 	if err != nil {
 		return err
 	}
-	surface := rendering.RenderDocumentWithOptions(document, buildStyleEngine(document, documentURL), width, height, documentRenderOptions(documentURL))
+	surface, err := rendering.RenderDocumentWithOptions(document, buildStyleEngine(document, documentURL), width, height, documentRenderOptions(documentURL))
+	if err != nil {
+		return err
+	}
 	file, err := os.Create(arguments[1])
 	if err != nil {
 		return err
@@ -283,7 +307,10 @@ func show(arguments []string) error {
 	}
 	engine := buildStyleEngine(document, documentURL)
 	options := documentRenderOptions(documentURL)
-	surface := rendering.RenderDocumentWithOptions(document, engine, width, height, options)
+	surface, err := rendering.RenderDocumentWithOptions(document, engine, width, height, options)
+	if err != nil {
+		return err
+	}
 	title := "gonetsurf: " + arguments[0]
 	if documentURL != nil {
 		title = "gonetsurf: " + documentURL.String()
@@ -299,11 +326,14 @@ func show(arguments []string) error {
 		return fmt.Errorf("unexpected window implementation")
 	}
 	window.SetResizeHandler(func(width, height int) {
-		rendered := rendering.RenderDocumentWithOptions(document, engine, width, height, options)
-		window.Surface().Blit(0, 0, rendered, rendering.Copy)
+		rendered, renderErr := rendering.RenderDocumentWithOptions(document, engine, width, height, options)
+		if renderErr != nil {
+			return
+		}
+		window.Surface().Blit(0, 0, rendered, geometry.Copy)
 		window.Present(image.Rect(0, 0, width, height))
 	})
-	window.Surface().Blit(0, 0, surface, rendering.Copy)
+	window.Surface().Blit(0, 0, surface, geometry.Copy)
 	if err := window.Present(image.Rect(0, 0, width, height)); err != nil {
 		return err
 	}
@@ -346,6 +376,7 @@ func reftestCommand(arguments []string) error {
 		LoadFont:       documentFontLoader(),
 		LoadStylesheet: fetchStylesheet,
 		Tolerance:      0,
+		Renderer:       activeRenderer,
 	}
 	result, err := reftest.Compare(testSource, referenceSource, baseURL, options)
 	if err != nil {
@@ -373,6 +404,7 @@ func documentFontLoader() fonts.Loader {
 
 func documentRenderOptions(documentURL *urls.URL) rendering.Options {
 	return rendering.Options{
+		Renderer: activeRenderer,
 		Images:   documentImageProvider(documentURL),
 		LoadFont: documentFontLoader(),
 	}
@@ -478,4 +510,26 @@ func buildLayoutBox(box *layouts.Box) layoutBoxJSON {
 		result.Children = append(result.Children, buildLayoutBox(child))
 	}
 	return result
+}
+
+func extractRenderer(arguments []string) ([]string, string, error) {
+	name := "auto"
+	remaining := make([]string, 0, len(arguments))
+	for index := 0; index < len(arguments); index++ {
+		argument := arguments[index]
+		if argument == "--renderer" {
+			if index+1 >= len(arguments) {
+				return nil, "", fmt.Errorf("--renderer requires a value")
+			}
+			name = arguments[index+1]
+			index++
+			continue
+		}
+		if strings.HasPrefix(argument, "--renderer=") {
+			name = strings.TrimPrefix(argument, "--renderer=")
+			continue
+		}
+		remaining = append(remaining, argument)
+	}
+	return remaining, name, nil
 }

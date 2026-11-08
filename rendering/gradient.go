@@ -1,6 +1,8 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/geometry"
+	"gonetsurf/rendering/interfaces"
 	"math"
 	"strings"
 
@@ -525,21 +527,16 @@ func interpolateColor(first, second Color, fraction float64) Color {
 	red := (float64(first.Red)/255*firstAlpha*(1-fraction) + float64(second.Red)/255*secondAlpha*fraction) / alpha
 	green := (float64(first.Green)/255*firstAlpha*(1-fraction) + float64(second.Green)/255*secondAlpha*fraction) / alpha
 	blue := (float64(first.Blue)/255*firstAlpha*(1-fraction) + float64(second.Blue)/255*secondAlpha*fraction) / alpha
-	return Color{Red: toByte(red), Green: toByte(green), Blue: toByte(blue), Alpha: toByte(alpha)}
+	return Color{Red: geometry.ToByte(red), Green: geometry.ToByte(green), Blue: geometry.ToByte(blue), Alpha: geometry.ToByte(alpha)}
 }
 
-func (painter *Painter) paintGradient(spec *gradientSpec, surface *Surface, area, clip Rect, mask *Mask) {
+func (painter *Painter) paintGradient(spec *gradientSpec, surface interfaces.Canvas, area, clip Rect, mask *Mask) {
 	if spec == nil || area.Width <= 0 || area.Height <= 0 || clip.Width <= 0 || clip.Height <= 0 {
 		return
 	}
-	minX := int(math.Max(0, math.Max(math.Floor(clip.X), math.Floor(area.X))))
-	minY := int(math.Max(0, math.Max(math.Floor(clip.Y), math.Floor(area.Y))))
-	maxX := int(math.Min(float64(surface.Width), math.Min(math.Ceil(clip.X+clip.Width), math.Ceil(area.X+area.Width))))
-	maxY := int(math.Min(float64(surface.Height), math.Min(math.Ceil(clip.Y+clip.Height), math.Ceil(area.Y+area.Height))))
-	if minX >= maxX || minY >= maxY {
-		return
-	}
-
+	var gradient geometry.Gradient
+	gradient.Repeating = spec.repeating
+	gradient.Kind = geometry.LinearGradient
 	switch spec.kind {
 	case linearGradient:
 		angle := spec.angle * math.Pi / 180
@@ -561,23 +558,13 @@ func (painter *Painter) paintGradient(spec *gradientSpec, surface *Surface, area
 		if lineLength <= 0 {
 			return
 		}
-		stops := resolveGradientStops(spec.stops, lineLength)
-		centerX := area.X + area.Width/2
-		centerY := area.Y + area.Height/2
-		for yPos := minY; yPos < maxY; yPos++ {
-			for xPos := minX; xPos < maxX; xPos++ {
-				coverage := 1.0
-				if mask != nil {
-					coverage = mask.At(xPos, yPos)
-				}
-				if coverage <= 0 || !pointInRect(float64(xPos)+0.5, float64(yPos)+0.5, clip) {
-					continue
-				}
-				offset := (float64(xPos)+0.5-centerX)*directionX + (float64(yPos)+0.5-centerY)*directionY
-				position := 0.5 + offset/lineLength
-				surface.blendPixel(xPos, yPos, gradientColorAt(stops, position, spec.repeating), coverage)
-			}
-		}
+		gradient.Kind = geometry.LinearGradient
+		gradient.CenterX = area.X + area.Width/2
+		gradient.CenterY = area.Y + area.Height/2
+		gradient.DirectionX = directionX
+		gradient.DirectionY = directionY
+		gradient.LineLength = lineLength
+		gradient.Stops = toGeometryStops(resolveGradientStops(spec.stops, lineLength))
 	case radialGradient:
 		centerX := area.X + spec.positionX.resolve(area.Width)
 		centerY := area.Y + spec.positionY.resolve(area.Height)
@@ -586,49 +573,32 @@ func (painter *Painter) paintGradient(spec *gradientSpec, surface *Surface, area
 			return
 		}
 		reference := math.Max(radiusX, radiusY)
-		stops := resolveGradientStops(spec.stops, reference)
-		for yPos := minY; yPos < maxY; yPos++ {
-			for xPos := minX; xPos < maxX; xPos++ {
-				coverage := 1.0
-				if mask != nil {
-					coverage = mask.At(xPos, yPos)
-				}
-				if coverage <= 0 || !pointInRect(float64(xPos)+0.5, float64(yPos)+0.5, clip) {
-					continue
-				}
-				normalizedX := (float64(xPos) + 0.5 - centerX) / radiusX
-				normalizedY := (float64(yPos) + 0.5 - centerY) / radiusY
-				position := math.Hypot(normalizedX, normalizedY)
-				surface.blendPixel(xPos, yPos, gradientColorAt(stops, position, spec.repeating), coverage)
-			}
-		}
+		gradient.Kind = geometry.RadialGradient
+		gradient.CenterX = centerX
+		gradient.CenterY = centerY
+		gradient.RadiusX = radiusX
+		gradient.RadiusY = radiusY
+		gradient.Stops = toGeometryStops(resolveGradientStops(spec.stops, reference))
 	case conicGradient:
 		centerX := area.X + spec.positionX.resolve(area.Width)
 		centerY := area.Y + spec.positionY.resolve(area.Height)
-		stops := resolveGradientStops(spec.stops, 1)
-		fromRadians := spec.fromAngle * math.Pi / 180
-		for yPos := minY; yPos < maxY; yPos++ {
-			for xPos := minX; xPos < maxX; xPos++ {
-				coverage := 1.0
-				if mask != nil {
-					coverage = mask.At(xPos, yPos)
-				}
-				if coverage <= 0 || !pointInRect(float64(xPos)+0.5, float64(yPos)+0.5, clip) {
-					continue
-				}
-				angle := math.Atan2(float64(xPos)+0.5-centerX, -(float64(yPos) + 0.5 - centerY))
-				if angle < 0 {
-					angle += 2 * math.Pi
-				}
-				position := (angle - fromRadians) / (2 * math.Pi)
-				position = math.Mod(position, 1)
-				if position < 0 {
-					position += 1
-				}
-				surface.blendPixel(xPos, yPos, gradientColorAt(stops, position, spec.repeating), coverage)
-			}
-		}
+		gradient.Kind = geometry.ConicGradient
+		gradient.CenterX = centerX
+		gradient.CenterY = centerY
+		gradient.FromAngle = spec.fromAngle * math.Pi / 180
+		gradient.Stops = toGeometryStops(resolveGradientStops(spec.stops, 1))
+	default:
+		return
 	}
+	surface.FillGradient(gradient, area, clip, mask)
+}
+
+func toGeometryStops(stops []resolvedGradientStop) []geometry.GradientStop {
+	result := make([]geometry.GradientStop, len(stops))
+	for index, stop := range stops {
+		result[index] = geometry.GradientStop{Position: stop.position, Color: stop.color}
+	}
+	return result
 }
 
 func radialRadii(spec *gradientSpec, area Rect, centerX, centerY float64) (float64, float64) {

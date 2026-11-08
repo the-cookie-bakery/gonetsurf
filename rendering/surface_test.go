@@ -64,7 +64,7 @@ func TestClearAndClip(t *testing.T) {
 
 func TestImageUnpremultiplies(t *testing.T) {
 	surface := NewSurface(1, 1)
-	surface.blendPixel(0, 0, Color{Red: 255, Green: 0, Blue: 0, Alpha: 128}, 1)
+	surface.BlendPixel(0, 0, Color{Red: 255, Green: 0, Blue: 0, Alpha: 128}, 1)
 	converted := surface.Image()
 	got := converted.NRGBAAt(0, 0)
 	want := color.NRGBA{R: 255, A: 128}

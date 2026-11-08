@@ -5,6 +5,7 @@ import (
 	"gonetsurf/dom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
+	"gonetsurf/rendering/interfaces"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
 )
@@ -102,13 +103,13 @@ type subframeProvider struct {
 	owner *pageState
 }
 
-func (provider subframeProvider) RenderSubframe(node *dom.Node, width, height int) *rendering.Surface {
+func (provider subframeProvider) RenderSubframe(node *dom.Node, width, height int) (interfaces.Surface, error) {
 	if provider.owner == nil {
-		return nil
+		return nil, nil
 	}
 	frame := provider.owner.frames[node]
 	if frame == nil || frame.page == nil {
-		return nil
+		return nil, nil
 	}
 	if width < 1 {
 		width = 1

@@ -54,7 +54,9 @@ func TestShellUsesBrokers(t *testing.T) {
 	if shell.Browser.ActiveTab().Title != "Broker Page" {
 		t.Errorf("title = %q", shell.Browser.ActiveTab().Title)
 	}
-	_ = shell.Render().Image()
+	if rendered, renderErr := shell.Render(); renderErr == nil {
+		_ = rendered.Image()
+	}
 	if err := shell.SaveSession(context.Background()); err != nil {
 		t.Fatal(err)
 	}

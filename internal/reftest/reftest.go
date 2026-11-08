@@ -10,6 +10,7 @@ import (
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
 	"gonetsurf/rendering/fonts"
+	"gonetsurf/rendering/interfaces"
 	"gonetsurf/urls"
 )
 
@@ -22,6 +23,7 @@ type Options struct {
 	LoadStylesheet func(*urls.URL) ([]byte, error)
 	Tolerance      uint8
 	MaxDifferent   int
+	Renderer       interfaces.Renderer
 }
 
 func (options Options) normalized() Options {
@@ -38,7 +40,7 @@ func (options Options) normalized() Options {
 }
 
 // Render parses and renders source into a surface.
-func Render(source []byte, base *urls.URL, options Options) (*rendering.Surface, error) {
+func Render(source []byte, base *urls.URL, options Options) (interfaces.Surface, error) {
 	options = options.normalized()
 	document, err := html.Parse(source, html.ParseOptions{URL: base})
 	if err != nil {
@@ -46,10 +48,14 @@ func Render(source []byte, base *urls.URL, options Options) (*rendering.Surface,
 	}
 	loader := adapters.StylesheetLoader{Fetch: options.LoadStylesheet}
 	engine := loader.Engine(document, base)
-	surface := rendering.RenderDocumentWithOptions(document, engine, options.Width, options.Height, rendering.Options{
+	surface, err := rendering.RenderDocumentWithOptions(document, engine, options.Width, options.Height, rendering.Options{
 		Images:   options.Images,
 		LoadFont: options.LoadFont,
+		Renderer: options.Renderer,
 	})
+	if err != nil {
+		return nil, err
+	}
 	return surface, nil
 }
 

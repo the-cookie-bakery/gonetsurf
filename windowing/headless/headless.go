@@ -6,7 +6,8 @@ import (
 	"context"
 	"image"
 
-	"gonetsurf/rendering"
+	"gonetsurf/rendering/interfaces"
+	"gonetsurf/rendering/software"
 	"gonetsurf/windowing"
 )
 
@@ -30,7 +31,7 @@ func (display *Display) Open() (windowing.Window, error) {
 			width:     display.width,
 			height:    display.height,
 			title:     display.title,
-			surface:   rendering.NewSurface(display.width, display.height),
+			surface:   software.NewSurface(display.width, display.height),
 			scale:     1,
 			events:    make(chan windowing.Event, 64),
 			clipboard: "",
@@ -56,14 +57,14 @@ type Window struct {
 	width     int
 	height    int
 	title     string
-	surface   *rendering.Surface
+	surface   *software.Surface
 	scale     float64
 	events    chan windowing.Event
 	clipboard string
 }
 
 // Surface returns the window's rendering surface.
-func (window *Window) Surface() *rendering.Surface {
+func (window *Window) Surface() interfaces.Surface {
 	return window.surface
 }
 

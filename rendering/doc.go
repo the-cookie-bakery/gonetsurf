@@ -1,4 +1,7 @@
-// Package rendering rasterizes laid-out boxes into pixels. It owns the
-// premultiplied surface, path rasterization, compositing, paint traversal, and
-// the headless PNG renderer used by the pixel test harness.
+// Package rendering is the paint frontend: it turns laid-out boxes and
+// computed styles into a backend-neutral scene using interfaces.Canvas.
+//
+// Concrete rendering pipelines live in the software and Vulkan subpackages;
+// shared value types live in rendering/geometry and backend contracts in
+// rendering/interfaces.
 package rendering

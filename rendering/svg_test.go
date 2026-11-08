@@ -3,6 +3,8 @@ package rendering
 import (
 	"encoding/base64"
 	"testing"
+
+	"gonetsurf/rendering/software"
 )
 
 func TestSVGShapesAndViewBox(t *testing.T) {
@@ -10,7 +12,7 @@ func TestSVGShapesAndViewBox(t *testing.T) {
 <rect x="0" y="0" width="10" height="10" fill="#ff0000"/>
 <circle cx="15" cy="5" r="4" fill="#0000ff"/>
 </svg>`
-	image, err := DecodeSVG([]byte(source), SVGOptions{})
+	image, err := software.DecodeSVG([]byte(source), software.SVGOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +35,7 @@ func TestSVGPathTransform(t *testing.T) {
 	source := `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
 <path d="M0 0 L10 0 L10 10 Z" fill="#00aa00" transform="translate(5 5)"/>
 </svg>`
-	image, err := DecodeSVG([]byte(source), SVGOptions{})
+	image, err := software.DecodeSVG([]byte(source), software.SVGOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +58,7 @@ func TestSVGStroke(t *testing.T) {
 	source := `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20">
 <line x1="0" y1="10" x2="30" y2="10" stroke="#000000" stroke-width="6"/>
 </svg>`
-	image, err := DecodeSVG([]byte(source), SVGOptions{})
+	image, err := software.DecodeSVG([]byte(source), software.SVGOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +73,7 @@ func TestSVGLinearGradient(t *testing.T) {
 <defs><linearGradient id="grad"><stop offset="0%" stop-color="#ff0000"/><stop offset="100%" stop-color="#0000ff"/></linearGradient></defs>
 <rect x="0" y="0" width="40" height="10" fill="url(#grad)"/>
 </svg>`
-	image, err := DecodeSVG([]byte(source), SVGOptions{})
+	image, err := software.DecodeSVG([]byte(source), software.SVGOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +93,7 @@ func TestSVGIgnoresScriptAndForeignObject(t *testing.T) {
 <foreignObject width="20" height="20"><div xmlns="http://www.w3.org/1999/xhtml">text</div></foreignObject>
 <rect width="20" height="20" fill="#ff0000"/>
 </svg>`
-	image, err := DecodeSVG([]byte(source), SVGOptions{})
+	image, err := software.DecodeSVG([]byte(source), software.SVGOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,10 +105,10 @@ func TestSVGIgnoresScriptAndForeignObject(t *testing.T) {
 
 func TestSVGBudget(t *testing.T) {
 	source := `<svg xmlns="http://www.w3.org/2000/svg" width="5000" height="5000"><rect width="5000" height="5000"/></svg>`
-	if _, err := DecodeSVG([]byte(source), SVGOptions{MaxDimension: 1024}); err == nil {
+	if _, err := software.DecodeSVG([]byte(source), software.SVGOptions{MaxDimension: 1024}); err == nil {
 		t.Fatal("expected a dimension budget error")
 	}
-	if _, err := DecodeSVG([]byte(source), SVGOptions{MaxPixels: 100}); err == nil {
+	if _, err := software.DecodeSVG([]byte(source), software.SVGOptions{MaxPixels: 100}); err == nil {
 		t.Fatal("expected a pixel budget error")
 	}
 }

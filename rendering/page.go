@@ -5,6 +5,9 @@ import (
 	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/mediaqueries"
 	"gonetsurf/rendering/fonts"
+	"gonetsurf/rendering/interfaces"
+	"gonetsurf/rendering/scene"
+	"gonetsurf/rendering/software"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
 )
@@ -244,16 +247,28 @@ func (page *Page) HitTest(x, y float64) *layouts.Box {
 }
 
 // Render lays out the document when necessary and paints it.
-func (page *Page) Render() *Surface {
+func (page *Page) Render() (interfaces.Surface, error) {
 	if page == nil {
-		return NewSurface(0, 0)
+		return software.NewSurface(0, 0), nil
 	}
-	surface := NewSurface(page.Width, page.Height)
-	surface.Clear(NewColor(255, 255, 255))
-	root := page.root()
-	if root == nil {
-		return surface
+	renderer := page.Options.Renderer
+	if renderer == nil || renderer.Name() == "software" {
+		surface := software.NewSurface(page.Width, page.Height)
+		surface.Clear(NewColor(255, 255, 255))
+		if root := page.root(); root != nil {
+			page.paint(root, surface)
+		}
+		return surface, nil
 	}
+	recorder := scene.New(page.Width, page.Height)
+	recorder.Clear(NewColor(255, 255, 255))
+	if root := page.root(); root != nil {
+		page.paint(root, recorder)
+	}
+	return renderer.Render(recorder.Scene())
+}
+
+func (page *Page) paint(root *layouts.Box, canvas interfaces.Canvas) {
 	page.applyScroll(root, page.scrollX, page.scrollY)
 	root.ScrollLeft = 0
 	root.ScrollTop = 0
@@ -266,8 +281,7 @@ func (page *Page) Render() *Surface {
 	if page.Document != nil {
 		painter.BaseURL = page.Document.URL
 	}
-	painter.Paint(root, surface)
-	return surface
+	painter.Paint(root, canvas)
 }
 
 func fontLibraryFor(document *dom.Document, engine *styles.Engine, options Options) *fonts.Library {

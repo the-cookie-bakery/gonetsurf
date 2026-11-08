@@ -45,8 +45,9 @@ A task reaches `Verified` only when `UT=Y`, `E2E=Y`, `Spec=Compliant`, and `Bugs
 | 8 Window/UI | 6 | 6 | 0 | 0 | 0 |
 | 9 Process/Sandbox | 6 | 6 | 0 | 0 | 0 |
 | 10 JS/Web APIs/Platforms | 10 | 0 | 0 | 10 | 0 |
+| 11 Rendering Backends | 5 | 4 | 1 | 0 | 0 |
 | Cross-cutting | 8 | 0 | 0 | 8 | 0 |
-| **Total** | **117** | **97** | **2** | **18** | **0** |
+| **Total** | **122** | **101** | **3** | **18** | **0** |
 
 ## Progress log
 
@@ -798,3 +799,22 @@ _None yet._
 ## Blocked Tasks
 
 _None yet. Add a row here with the blocking dependency when a task is `Blocked`._
+
+## Rendering backend progress
+
+- **P11-RENDER-001 — Verified:** `rendering/geometry`, `rendering/interfaces`,
+  and `rendering/utils/css` exist. Shared value types, rasterization masks,
+  transforms, and backend contracts live outside the frontend.
+- **P11-RENDER-002 — Verified:** `rendering/scene.Recorder` records
+  `interfaces.Canvas` operations and `software.Execute` replays them.
+  `TestSceneRendererMatchesDirectSoftware` asserts byte-identical output.
+- **P11-RENDER-003 — Verified:** the CPU surface, rasterizer, compositor, image
+  sampling, and SVG rasterizer live in `rendering/software`. Render APIs return
+  `(interfaces.Surface, error)`. The full test suite passes.
+- **P11-RENDER-004 — Verified:** `rendering/backends` and `--renderer` are wired
+  through `cmd/netsurf`, `netsurfctl render/show/reftest`, pages, subframes,
+  chrome, and reftests. The default remains software.
+- **P11-RENDER-005 — Implemented/Partial:** the Vulkan package, build tags,
+  shader sources, Makefile targets, and fallback renderer exist. The shader
+  pipelines and X11 swapchain presenter are not yet implemented; see
+  [`rendering-refactor.md`](../rendering-refactor.md).

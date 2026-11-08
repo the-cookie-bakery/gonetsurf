@@ -1,12 +1,13 @@
 package rendering
 
 import (
+	"gonetsurf/rendering/interfaces"
 	"math"
 
 	"gonetsurf/layouts"
 )
 
-func (painter *Painter) paintScrollbars(box *layouts.Box, surface *Surface, xPos, yPos float64) {
+func (painter *Painter) paintScrollbars(box *layouts.Box, surface interfaces.Canvas, xPos, yPos float64) {
 	if box == nil || (!box.HasVerticalScrollbar && !box.HasHorizontalScrollbar) {
 		return
 	}

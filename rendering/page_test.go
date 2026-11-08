@@ -6,6 +6,7 @@ import (
 	"gonetsurf/dom"
 	"gonetsurf/parsers/css/cssom"
 	"gonetsurf/parsers/html"
+	"gonetsurf/rendering/interfaces"
 	"gonetsurf/styles"
 )
 
@@ -13,8 +14,8 @@ type testSubframes struct {
 	surface *Surface
 }
 
-func (provider testSubframes) RenderSubframe(node *dom.Node, width, height int) *Surface {
-	return provider.surface
+func (provider testSubframes) RenderSubframe(node *dom.Node, width, height int) (interfaces.Surface, error) {
+	return provider.surface, nil
 }
 
 func testPage(t *testing.T, source string, width, height int) *Page {
@@ -52,7 +53,11 @@ func TestPageScrollAndHitTest(t *testing.T) {
 	if _, top := page.Scroll(); top != 100 {
 		t.Fatalf("scroll top = %v", top)
 	}
-	surface := page.Render()
+	rendered, renderErr := page.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if pixel := testPixelAt(surface, 10, 10); pixel != (Color{Red: 0, Green: 0, Blue: 255, Alpha: 255}) {
 		t.Errorf("pixel = %#v", pixel)
 	}
@@ -73,7 +78,11 @@ func TestPagePaintsSubframe(t *testing.T) {
 	frame := NewSurface(100, 50)
 	frame.Clear(NewColor(0, 255, 0))
 	page.Options.Subframes = testSubframes{surface: frame}
-	surface := page.Render()
+	rendered, renderErr := page.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if pixel := testPixelAt(surface, 10, 10); pixel != (Color{Red: 0, Green: 255, Blue: 0, Alpha: 255}) {
 		t.Errorf("iframe pixel = %#v", pixel)
 	}
@@ -85,14 +94,18 @@ func TestPageResizeUpdatesMediaQueries(t *testing.T) {
 		#box { display:block; width:100px; height:10px }
 		@media (max-width: 200px) { #box { width:50px } }
 	</style></head><body><div id="box"></div></body></html>`, 300, 200)
-	page.Render()
+	if _, renderErr := page.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	box := page.Document.GetElementById("box")
 	layoutBox := page.BoxForNode(box)
 	if layoutBox == nil || layoutBox.Width != 100 {
 		t.Fatalf("initial width = %v", layoutBox)
 	}
 	page.Resize(150, 200)
-	page.Render()
+	if _, renderErr := page.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	layoutBox = page.BoxForNode(box)
 	if layoutBox == nil || layoutBox.Width != 50 {
 		t.Errorf("resized width = %v, want 50", layoutBox)
@@ -105,7 +118,9 @@ func TestPageScrollsNestedContainerUnderPointer(t *testing.T) {
 		#scroller { display:block; width:100px; height:50px; overflow:auto }
 		#content { display:block; width:100px; height:500px }
 	</style></head><body><div id="scroller"><div id="content"></div></div></body></html>`, 100, 100)
-	page.Render()
+	if _, renderErr := page.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	if _, maximum := page.MaxScroll(); maximum != 0 {
 		t.Fatalf("root max scroll = %v", maximum)
 	}
@@ -127,13 +142,19 @@ func TestFixedElementsStayDuringNestedScroll(t *testing.T) {
 	</style></head><body>
 		<div id="header"></div><div id="scroller"><div id="content"></div></div><div id="footer"></div>
 	</body></html>`, 100, 100)
-	page.Render()
+	if _, renderErr := page.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	page.ScrollByAt(10, 20, 0, 80)
 	scroller := page.BoxForNode(page.Document.GetElementById("scroller"))
 	if scroller == nil || scroller.ScrollTop != 80 {
 		t.Fatalf("nested scroll = %v", scroller)
 	}
-	surface := page.Render()
+	rendered, renderErr := page.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if pixel := testPixelAt(surface, 5, 5); pixel != (Color{Red: 255, Green: 0, Blue: 0, Alpha: 255}) {
 		t.Errorf("header pixel = %#v", pixel)
 	}
@@ -149,9 +170,15 @@ func TestNestedScrollPaintsContentAtSingleOffset(t *testing.T) {
 		.first { display:block; width:100px; height:100px; background:#ff0000 }
 		.second { display:block; width:100px; height:100px; background:#0000ff }
 	</style></head><body><div id="scroller"><div class="first"></div><div class="second"></div></div></body></html>`, 100, 100)
-	page.Render()
+	if _, renderErr := page.Render(); renderErr != nil {
+		t.Fatal(renderErr)
+	}
 	page.ScrollByAt(10, 10, 0, 100)
-	surface := page.Render()
+	rendered, renderErr := page.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if pixel := testPixelAt(surface, 10, 10); pixel != (Color{Red: 0, Green: 0, Blue: 255, Alpha: 255}) {
 		t.Errorf("scrolled pixel = %#v, want blue", pixel)
 	}
@@ -163,7 +190,11 @@ func TestPagePaintsGeneratedContent(t *testing.T) {
 		#box { display:block }
 		#box::before { content:""; display:inline-block; width:20px; height:20px; background:#ff0000 }
 	</style></head><body><div id="box"></div></body></html>`, 100, 100)
-	surface := page.Render()
+	rendered, renderErr := page.Render()
+	if renderErr != nil {
+		t.Fatal(renderErr)
+	}
+	surface := asSoftwareSurface(t, rendered)
 	if pixel := testPixelAt(surface, 5, 5); pixel != (Color{Red: 255, Green: 0, Blue: 0, Alpha: 255}) {
 		t.Errorf("generated content pixel = %#v", pixel)
 	}

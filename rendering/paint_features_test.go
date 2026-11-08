@@ -25,7 +25,11 @@ func renderTestPageWithProvider(t *testing.T, source string, width, height int, 
 	t.Helper()
 	document := mustParseTestPage(t, source)
 	engine := buildTestStyleEngine(t, document)
-	return RenderDocumentWithProvider(document, engine, width, height, provider)
+	surface, err := RenderDocumentWithProvider(document, engine, width, height, provider)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return asSoftwareSurface(t, surface)
 }
 
 func mustParseTestPage(t *testing.T, source string) *dom.Document {

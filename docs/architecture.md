@@ -85,7 +85,13 @@ state.
 | `parsers/css` | Tokenizer, parser, grammar engine, selectors, values, CSSOM, cascade, media, animations. |
 | `styles` | Style resolution, inheritance, computed values, UA stylesheet, presentational hints. |
 | `layouts` | Box tree and formatting contexts; geometry and text layout. |
-| `rendering` | Rasterizer, fonts, images, color, paint, compositor. |
+| `rendering` | Paint frontend, page orchestration, image providers, and renderer selection. |
+| `rendering/geometry` | Backend-neutral value types, path/coverage math, transforms. |
+| `rendering/interfaces` | Surface, Canvas, Renderer, Backend, Presenter, and scene contracts. |
+| `rendering/scene` | Display-list recorder used by non-software backends. |
+| `rendering/software` | CPU surface, rasterizer, compositor, and SVG rasterizer. |
+| `rendering/vulkan` | Optional cgo/Vulkan backend (scaffolded). |
+| `rendering/utils/css` | Shared CSS value parsing helpers. |
 | `windowing` | Display abstraction plus X11, Wayland, and headless backends. |
 | `shells` | Browser chrome, tabs, omnibox, history, privacy dashboard. |
 | `browsers` | Tab/session/navigation/history model. |

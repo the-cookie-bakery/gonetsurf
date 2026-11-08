@@ -639,6 +639,46 @@ pixel-diff tolerance, and the reftest harness runs in CI.
 
 ---
 
+## Phase 11 — Rendering Backends
+
+**Goal:** support multiple rendering pipelines behind backend-neutral interfaces.
+
+### Tasks
+
+- **P11-RENDER-001** Geometry, interfaces, and shared CSS helpers.
+  - Deliverable: `rendering/geometry`, `rendering/interfaces`, `rendering/utils/css`;
+    move shared types and pure math; define `Surface`, `Canvas`, `Renderer`,
+    `Backend`, `Presenter`, and `Scene`.
+  - Acceptance: all existing tests pass; no behavior change.
+  - Spec: N/A.
+- **P11-RENDER-002** Scene recorder and software parity.
+  - Deliverable: painter records `interfaces.Canvas` commands; software executor
+    replays scenes; parity test compares direct and recorded pixels.
+  - Acceptance: byte-identical software output.
+  - Spec: N/A.
+- **P11-RENDER-003** Move software backend to `rendering/software`.
+  - Deliverable: surface, rasterizer, compositing, image sampling, and SVG move
+    behind `interfaces.Surface`; render APIs return `(Surface, error)`.
+  - Acceptance: full test suite green.
+  - Spec: N/A.
+- **P11-RENDER-004** Backend selection.
+  - Deliverable: `rendering/backends`, `--renderer` on `cmd/netsurf` and
+    `netsurfctl`, renderer plumbing through pages, subframes, chrome, and reftests.
+  - Acceptance: software default; unavailable Vulkan reports a clear error.
+  - Spec: N/A.
+- **P11-RENDER-005** Vulkan GPU backend.
+  - Deliverable: cgo bindings, offscreen targets/readback, shader pipelines for
+    all canvas commands, X11 swapchain presenter.
+  - Acceptance: cross-backend parity suite within tolerance; GPU benchmarks.
+  - Spec: N/A.
+
+**Status:** `P11-RENDER-001`–`004` are implemented and verified. `P11-RENDER-005`
+is scaffolded: the package, build tags, selection, shader sources, and Makefile
+targets exist, but the Vulkan command lowering and swapchain presenter remain.
+See [`rendering-refactor.md`](../rendering-refactor.md).
+
+---
+
 ## Phase 8 — Window and UI Shell
 
 **Goal:** an interactive native browser.

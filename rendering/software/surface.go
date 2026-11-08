@@ -1,49 +1,9 @@
-package rendering
+package software
 
 import (
 	"image"
 	"math"
 )
-
-// Color is a straight (non-premultiplied) sRGB color with 8-bit channels.
-type Color struct {
-	Red   uint8
-	Green uint8
-	Blue  uint8
-	Alpha uint8
-}
-
-// NewColor returns an opaque color from its channels.
-func NewColor(red, green, blue uint8) Color {
-	return Color{Red: red, Green: green, Blue: blue, Alpha: 255}
-}
-
-// Transparent is the fully transparent color.
-var Transparent = Color{}
-
-// Rect is an axis-aligned rectangle in surface coordinates.
-type Rect struct {
-	X      float64
-	Y      float64
-	Width  float64
-	Height float64
-}
-
-// IsEmpty reports whether the rectangle has no area.
-func (rect Rect) IsEmpty() bool {
-	return rect.Width <= 0 || rect.Height <= 0
-}
-
-func (rect Rect) intersect(other Rect) Rect {
-	minX := math.Max(rect.X, other.X)
-	minY := math.Max(rect.Y, other.Y)
-	maxX := math.Min(rect.X+rect.Width, other.X+other.Width)
-	maxY := math.Min(rect.Y+rect.Height, other.Y+other.Height)
-	if maxX <= minX || maxY <= minY {
-		return Rect{}
-	}
-	return Rect{X: minX, Y: minY, Width: maxX - minX, Height: maxY - minY}
-}
 
 // Surface is a premultiplied RGBA8 pixel buffer.
 //
@@ -82,7 +42,7 @@ func (surface *Surface) Bounds() Rect {
 
 // SetClip replaces the clip rectangle. It is clipped to the surface bounds.
 func (surface *Surface) SetClip(rect Rect) {
-	surface.clip = rect.intersect(surface.Bounds())
+	surface.clip = rect.Intersect(surface.Bounds())
 }
 
 // ResetClip restores the clip to the full surface.
@@ -97,7 +57,7 @@ func (surface *Surface) Clip() Rect {
 
 // Clear replaces every pixel with color.
 func (surface *Surface) Clear(color Color) {
-	red, green, blue, alpha := color.premultiplied(1)
+	red, green, blue, alpha := color.Premultiplied(1)
 	for offset := 0; offset < len(surface.Pix); offset += 4 {
 		surface.Pix[offset] = red
 		surface.Pix[offset+1] = green
@@ -111,7 +71,7 @@ func (surface *Surface) FillRect(rect Rect, color Color) {
 	if color.Alpha == 0 {
 		return
 	}
-	rect = rect.intersect(surface.clip)
+	rect = rect.Intersect(surface.clip)
 	if rect.IsEmpty() {
 		return
 	}
@@ -237,17 +197,6 @@ func (surface *Surface) Image() *image.NRGBA {
 		}
 	}
 	return result
-}
-
-func (color Color) premultiplied(coverage float64) (red, green, blue, alpha uint8) {
-	if coverage <= 0 || color.Alpha == 0 {
-		return 0, 0, 0, 0
-	}
-	scale := float64(color.Alpha) / 255 * coverage
-	return toByte(float64(color.Red) / 255 * scale),
-		toByte(float64(color.Green) / 255 * scale),
-		toByte(float64(color.Blue) / 255 * scale),
-		toByte(scale)
 }
 
 func toByte(value float64) uint8 {
