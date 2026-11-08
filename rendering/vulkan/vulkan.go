@@ -186,13 +186,15 @@ type contextKey struct {
 }
 
 type Renderer struct {
-	mutex          sync.Mutex
-	fallback       interfaces.Renderer
-	contexts       map[contextKey]*gpu.Context
-	caches         map[contextKey]*renderCache
-	gpuErr         error
-	fallbackLogged bool
-	geometry       layoutinginterfaces.GeometryHandle
+	mutex            sync.Mutex
+	fallback         interfaces.Renderer
+	contexts         map[contextKey]*gpu.Context
+	caches           map[contextKey]*renderCache
+	gpuErr           error
+	fallbackLogged   bool
+	geometry         layoutinginterfaces.GeometryHandle
+	presenterDisplay string
+	presenterWindow  uintptr
 }
 
 // Name returns the renderer name.
@@ -318,6 +320,8 @@ func (renderer *Renderer) SetGeometry(handle layoutinginterfaces.GeometryHandle)
 func (renderer *Renderer) AttachPresenter(display string, window uintptr, width, height int) error {
 	renderer.mutex.Lock()
 	defer renderer.mutex.Unlock()
+	renderer.presenterDisplay = display
+	renderer.presenterWindow = window
 	if renderer.contexts == nil {
 		renderer.contexts = make(map[contextKey]*gpu.Context)
 		renderer.caches = make(map[contextKey]*renderCache)
@@ -359,11 +363,49 @@ func (renderer *Renderer) PresentSurface(surface interfaces.Surface, damage imag
 	}
 	renderer.mutex.Lock()
 	defer renderer.mutex.Unlock()
-	context := renderer.contexts[contextKey{width: width, height: height}]
+	key := contextKey{width: width, height: height}
+	context := renderer.contexts[key]
 	if context == nil {
-		return fmt.Errorf("vulkan: no swapchain context")
+		if renderer.presenterWindow == 0 {
+			return fmt.Errorf("vulkan: no swapchain context")
+		}
+		created, err := gpu.New(width, height, vertexShader, solidShader, textureShader)
+		if err != nil {
+			return err
+		}
+		if err := created.CreatePathPipeline(pathShader); err != nil {
+			return err
+		}
+		if err := created.AttachSwapchain(renderer.presenterDisplay, renderer.presenterWindow, width, height); err != nil {
+			return err
+		}
+		context = created
+		renderer.contexts = ensureContexts(renderer.contexts)
+		renderer.caches = ensureCaches(renderer.caches)
+		renderer.contexts[key] = context
+		renderer.caches[key] = newRenderCache()
 	}
-	return context.PresentSurface(pixels, width, height)
+	if err := context.PresentSurface(pixels, width, height); err != nil {
+		if attachErr := context.AttachSwapchain(renderer.presenterDisplay, renderer.presenterWindow, width, height); attachErr != nil {
+			return err
+		}
+		return context.PresentSurface(pixels, width, height)
+	}
+	return nil
+}
+
+func ensureContexts(contexts map[contextKey]*gpu.Context) map[contextKey]*gpu.Context {
+	if contexts == nil {
+		return make(map[contextKey]*gpu.Context)
+	}
+	return contexts
+}
+
+func ensureCaches(caches map[contextKey]*renderCache) map[contextKey]*renderCache {
+	if caches == nil {
+		return make(map[contextKey]*renderCache)
+	}
+	return caches
 }
 
 // Close releases renderer resources.

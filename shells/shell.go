@@ -439,14 +439,26 @@ func (shell *Shell) present(window windowing.Window) {
 			if !shell.swapchainReady {
 				if attachErr := presenter.AttachPresenter(native.DisplayName(), native.NativeWindowID(), shell.Width, shell.Height); attachErr == nil {
 					shell.swapchainReady = true
+					if owned, ok := window.(interface{ SetGPUOwned(bool) }); ok {
+						owned.SetGPUOwned(true)
+					}
+				}
+			}
+			if !shell.swapchainReady {
+				if owned, ok := window.(interface{ SetGPUOwned(bool) }); ok {
+					owned.SetGPUOwned(false)
 				}
 			}
 			if shell.swapchainReady {
-				if presentErr := presenter.PresentSurface(surface, damage); presentErr != nil {
-					shell.Error = presentErr.Error()
+				if presentErr := presenter.PresentSurface(surface, damage); presentErr == nil {
+					shell.dirty = false
+					return
+				} else {
+					shell.swapchainReady = false
+					if owned, ok := window.(interface{ SetGPUOwned(bool) }); ok {
+						owned.SetGPUOwned(false)
+					}
 				}
-				shell.dirty = false
-				return
 			}
 		}
 	}

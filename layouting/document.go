@@ -146,6 +146,30 @@ func (documentLayout *DocumentLayout) Reflow() *model.Box {
 		return documentLayout.box
 	}
 
+	// Geometry-only updates such as scrolling must not rebuild the box tree or
+	// discard nested scroll offsets.
+	if documentLayout.hasLayout && documentLayout.geometryDirty && !documentLayout.resourcesDirty &&
+		documentLayout.version == documentLayout.Document.MutationVersion() &&
+		documentLayout.structureVersion == documentLayout.Document.StructuralVersion() {
+		documentLayout.ensureEngine()
+		if documentLayout.flow == nil {
+			return nil
+		}
+		result, err := documentLayout.flow.Layout(documentLayout.box, interfaces.Request{
+			Dirty:     interfaces.DirtySet{Reason: interfaces.DirtyStyle, WholeTree: true},
+			Resources: documentLayout.Resources,
+		})
+		if err == nil {
+			documentLayout.flowErr = nil
+			documentLayout.damage = result.Damage
+			documentLayout.pending = result.Pending
+			documentLayout.geometryDirty = !result.Complete
+		} else {
+			documentLayout.flowErr = err
+		}
+		return documentLayout.box
+	}
+
 	request := interfaces.Request{}
 	if documentLayout.resourcesDirty && documentLayout.hasLayout {
 		request.Dirty = interfaces.DirtySet{Reason: interfaces.DirtyImage, WholeTree: true}
@@ -157,7 +181,9 @@ func (documentLayout *DocumentLayout) Reflow() *model.Box {
 		refreshBoxStyles(documentLayout.box, styleMap)
 		request.Dirty = interfaces.DirtySet{Nodes: expandDirtyNodes(documentLayout.box, dirtyNodes), Reason: interfaces.DirtyStyle}
 	} else {
+		scrollOffsets := captureScrollOffsets(documentLayout.box)
 		documentLayout.box = model.BuildDocument(documentLayout.Document, documentLayout.Engine)
+		restoreScrollOffsets(documentLayout.box, scrollOffsets)
 		request.Dirty = interfaces.DirtySet{Reason: interfaces.DirtyStructure, WholeTree: true}
 		documentLayout.structureVersion = documentLayout.Document.StructuralVersion()
 	}
@@ -287,6 +313,51 @@ func expandDirtyNodes(root *model.Box, nodes []*dom.Node) []*dom.Node {
 		markSubtree(box)
 	}
 	return result
+}
+
+type scrollOffset struct {
+	left float64
+	top  float64
+}
+
+func captureScrollOffsets(root *model.Box) map[*dom.Node]scrollOffset {
+	offsets := map[*dom.Node]scrollOffset{}
+	var visit func(*model.Box)
+	visit = func(box *model.Box) {
+		if box == nil {
+			return
+		}
+		if box.Node != nil && (box.ScrollLeft != 0 || box.ScrollTop != 0) {
+			offsets[box.Node] = scrollOffset{left: box.ScrollLeft, top: box.ScrollTop}
+		}
+		for _, child := range box.Children {
+			visit(child)
+		}
+	}
+	visit(root)
+	return offsets
+}
+
+func restoreScrollOffsets(root *model.Box, offsets map[*dom.Node]scrollOffset) {
+	if len(offsets) == 0 {
+		return
+	}
+	var visit func(*model.Box)
+	visit = func(box *model.Box) {
+		if box == nil {
+			return
+		}
+		if box.Node != nil {
+			if offset, ok := offsets[box.Node]; ok {
+				box.ScrollLeft = offset.left
+				box.ScrollTop = offset.top
+			}
+		}
+		for _, child := range box.Children {
+			visit(child)
+		}
+	}
+	visit(root)
 }
 
 func refreshBoxStyle(box *model.Box, style *styles.Style) {

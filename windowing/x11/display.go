@@ -318,9 +318,10 @@ func (display *Display) allocateID() uint32 {
 
 // Window is an X11 window.
 type Window struct {
-	display *Display
-	id      uint32
-	gc      uint32
+	gpuOwned bool
+	display  *Display
+	id       uint32
+	gc       uint32
 
 	mutex         sync.Mutex
 	width         int
@@ -482,6 +483,17 @@ func (window *Window) setProtocols() {
 	display.sendRequest(changePropertyRequest(window.id, protocolAtom, 4, 32, data))
 }
 
+// SetGPUOwned disables software presentation for Expose events when the
+// window content is presented by a GPU swapchain.
+func (window *Window) SetGPUOwned(owned bool) {
+	if window == nil {
+		return
+	}
+	window.mutex.Lock()
+	window.gpuOwned = owned
+	window.mutex.Unlock()
+}
+
 // NativeWindowID returns the X11 window identifier.
 func (window *Window) NativeWindowID() uintptr {
 	if window == nil {
@@ -542,9 +554,12 @@ func (window *Window) handleEvent(packet []byte) (bool, error) {
 		window.mutex.Lock()
 		width := window.width
 		height := window.height
+		gpuOwned := window.gpuOwned
 		window.mutex.Unlock()
-		if err := window.Present(image.Rect(0, 0, width, height)); err != nil {
-			return false, err
+		if !gpuOwned {
+			if err := window.Present(image.Rect(0, 0, width, height)); err != nil {
+				return false, err
+			}
 		}
 		window.sendEvent(windowing.Event{Type: windowing.EventExpose})
 	case eventConfigureNotify:
