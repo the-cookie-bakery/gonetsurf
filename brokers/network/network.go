@@ -165,6 +165,10 @@ type Server struct {
 	Conn    *ipc.Conn
 	Token   ipc.Capability
 	Fetcher Fetcher
+
+	requestsMutex sync.Mutex
+	requests      map[uint64]context.CancelFunc
+	semaphore     chan struct{}
 }
 
 // Serve processes requests until the connection closes or ctx ends.
@@ -172,6 +176,12 @@ func (server *Server) Serve(ctx context.Context) error {
 	fetcher := server.Fetcher
 	if fetcher == nil {
 		fetcher = HTTPFetcher{}
+	}
+	if server.requests == nil {
+		server.requests = make(map[uint64]context.CancelFunc)
+	}
+	if server.semaphore == nil {
+		server.semaphore = make(chan struct{}, 16)
 	}
 	for {
 		if err := ctx.Err(); err != nil {
@@ -185,6 +195,12 @@ func (server *Server) Serve(ctx context.Context) error {
 			return err
 		}
 		if message.Kind == ipc.KindCancel {
+			server.requestsMutex.Lock()
+			cancel := server.requests[message.RequestID]
+			server.requestsMutex.Unlock()
+			if cancel != nil {
+				cancel()
+			}
 			continue
 		}
 		if message.Kind != ipc.KindRequest {
@@ -199,19 +215,31 @@ func (server *Server) Serve(ctx context.Context) error {
 			server.sendError(message.RequestID, "invalid request")
 			continue
 		}
-		response, err := dispatchRequest(ctx, fetcher, request)
-		if err != nil {
-			server.sendError(message.RequestID, err.Error())
-			continue
-		}
-		payload, err := json.Marshal(response)
-		if err != nil {
-			server.sendError(message.RequestID, err.Error())
-			continue
-		}
-		if err := server.Conn.Send(ipc.Message{Kind: ipc.KindResponse, RequestID: message.RequestID, Capability: server.Token, Payload: payload}); err != nil {
-			return err
-		}
+		requestContext, cancel := context.WithCancel(ctx)
+		server.requestsMutex.Lock()
+		server.requests[message.RequestID] = cancel
+		server.requestsMutex.Unlock()
+		go func(requestID uint64, request Request, requestContext context.Context, cancel context.CancelFunc) {
+			defer func() {
+				cancel()
+				server.requestsMutex.Lock()
+				delete(server.requests, requestID)
+				server.requestsMutex.Unlock()
+			}()
+			server.semaphore <- struct{}{}
+			defer func() { <-server.semaphore }()
+			response, err := dispatchRequest(requestContext, fetcher, request)
+			if err != nil {
+				server.sendError(requestID, err.Error())
+				return
+			}
+			payload, err := json.Marshal(response)
+			if err != nil {
+				server.sendError(requestID, err.Error())
+				return
+			}
+			_ = server.Conn.Send(ipc.Message{Kind: ipc.KindResponse, RequestID: requestID, Capability: server.Token, Payload: payload})
+		}(message.RequestID, request, requestContext, cancel)
 	}
 }
 
@@ -225,8 +253,12 @@ type Client struct {
 	Conn  *ipc.Conn
 	Token ipc.Capability
 
-	requestMutex sync.Mutex
 	nextID       atomic.Uint64
+	pendingMutex sync.Mutex
+	pending      map[uint64]chan ipc.Message
+	readOnce     sync.Once
+	readErrMutex sync.Mutex
+	readErr      error
 }
 
 // Fetch performs one broker fetch request.
@@ -260,33 +292,32 @@ func (client *Client) ResetTrackingSession(ctx context.Context, partition, topLe
 }
 
 func (client *Client) do(ctx context.Context, request Request) (Response, error) {
-	client.requestMutex.Lock()
-	defer client.requestMutex.Unlock()
 	payload, err := json.Marshal(request)
 	if err != nil {
 		return Response{}, err
 	}
 	requestID := client.nextID.Add(1)
-	deadline := time.Now().Add(30 * time.Second)
-	if contextDeadline, ok := ctx.Deadline(); ok && contextDeadline.Before(deadline) {
-		deadline = contextDeadline
+	responses := make(chan ipc.Message, 1)
+	client.pendingMutex.Lock()
+	if client.pending == nil {
+		client.pending = make(map[uint64]chan ipc.Message)
 	}
-	_ = client.Conn.SetDeadline(deadline)
-	defer client.Conn.SetDeadline(time.Time{})
+	client.pending[requestID] = responses
+	client.pendingMutex.Unlock()
+	client.startReader()
 	if err := client.Conn.Send(ipc.Message{Kind: ipc.KindRequest, RequestID: requestID, Capability: client.Token, Payload: payload}); err != nil {
+		client.unregister(requestID)
 		return Response{}, err
 	}
-	for {
-		if err := ctx.Err(); err != nil {
-			_ = client.Conn.Cancel(requestID)
-			return Response{}, err
-		}
-		message, err := client.Conn.Receive()
-		if err != nil {
-			return Response{}, err
-		}
-		if message.RequestID != requestID {
-			continue
+	select {
+	case <-ctx.Done():
+		client.unregister(requestID)
+		_ = client.Conn.Cancel(requestID)
+		return Response{}, ctx.Err()
+	case message, ok := <-responses:
+		client.unregister(requestID)
+		if !ok {
+			return Response{}, client.readFailure()
 		}
 		switch message.Kind {
 		case ipc.KindResponse:
@@ -300,7 +331,54 @@ func (client *Client) do(ctx context.Context, request Request) (Response, error)
 			_ = json.Unmarshal(message.Payload, &text)
 			return Response{}, fmt.Errorf("network broker: %s", text)
 		}
+		return Response{}, fmt.Errorf("network broker: unexpected message")
 	}
+}
+
+func (client *Client) startReader() {
+	client.readOnce.Do(func() {
+		go func() {
+			for {
+				message, err := client.Conn.Receive()
+				if err != nil {
+					client.readErrMutex.Lock()
+					client.readErr = err
+					client.readErrMutex.Unlock()
+					client.pendingMutex.Lock()
+					for requestID, channel := range client.pending {
+						close(channel)
+						delete(client.pending, requestID)
+					}
+					client.pendingMutex.Unlock()
+					return
+				}
+				client.pendingMutex.Lock()
+				channel := client.pending[message.RequestID]
+				client.pendingMutex.Unlock()
+				if channel != nil {
+					select {
+					case channel <- message:
+					default:
+					}
+				}
+			}
+		}()
+	})
+}
+
+func (client *Client) unregister(requestID uint64) {
+	client.pendingMutex.Lock()
+	delete(client.pending, requestID)
+	client.pendingMutex.Unlock()
+}
+
+func (client *Client) readFailure() error {
+	client.readErrMutex.Lock()
+	defer client.readErrMutex.Unlock()
+	if client.readErr != nil {
+		return client.readErr
+	}
+	return fmt.Errorf("network broker: connection closed")
 }
 
 func dispatchRequest(ctx context.Context, fetcher Fetcher, request Request) (Response, error) {

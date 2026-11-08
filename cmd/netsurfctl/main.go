@@ -25,7 +25,6 @@ import (
 	"gonetsurf/rendering"
 	"gonetsurf/rendering/backends"
 	"gonetsurf/rendering/fonts"
-	"gonetsurf/rendering/geometry"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
@@ -330,11 +329,11 @@ func show(arguments []string) error {
 		if renderErr != nil {
 			return
 		}
-		window.Surface().Blit(0, 0, rendered, geometry.Copy)
-		window.Present(image.Rect(0, 0, width, height))
+		if err := window.PresentSurface(rendered, image.Rect(0, 0, width, height)); err != nil {
+			return
+		}
 	})
-	window.Surface().Blit(0, 0, surface, geometry.Copy)
-	if err := window.Present(image.Rect(0, 0, width, height)); err != nil {
+	if err := window.PresentSurface(surface, image.Rect(0, 0, width, height)); err != nil {
 		return err
 	}
 	return display.EventLoop(context.Background())

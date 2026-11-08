@@ -11,9 +11,9 @@ import (
 
 // Recorder implements interfaces.Canvas by appending commands.
 type Recorder struct {
-	width  int
-	height int
-	clip   geometry.Rect
+	width    int
+	height   int
+	clip     geometry.Rect
 	commands []interfaces.Command
 }
 

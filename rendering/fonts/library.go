@@ -85,6 +85,7 @@ type fontEntry struct {
 	fontDisplay       string
 	localFont         func(string) (*sfnt.Font, error)
 	loadURL           func(string) ([]byte, error)
+	onLoad            func()
 
 	mutex    sync.Mutex
 	parsed   *sfnt.Font
@@ -151,6 +152,14 @@ func (entry *fontEntry) font() (*sfnt.Font, error) {
 		entry.loading = false
 		entry.mutex.Unlock()
 		close(done)
+		if async {
+			entry.mutex.Lock()
+			callback := entry.onLoad
+			entry.mutex.Unlock()
+			if callback != nil {
+				callback()
+			}
+		}
 	}
 	if async {
 		go load()
@@ -202,6 +211,9 @@ type Library struct {
 	familyEntries map[string][]*fontEntry
 
 	glyphCache *GlyphCache
+
+	asyncAuthorFonts bool
+	loadCallback     func()
 }
 
 // NewLibrary returns a library with the embedded Go fonts only.
@@ -243,6 +255,43 @@ func Default() *Library {
 	return defaultLibrary()
 }
 
+// SetAsyncAuthorFonts makes author fonts load in the background when they are
+// first requested, so layout can proceed with a fallback face.
+func (library *Library) SetAsyncAuthorFonts(enabled bool) {
+	if library == nil {
+		return
+	}
+	library.mutex.Lock()
+	library.asyncAuthorFonts = enabled
+	library.mutex.Unlock()
+	if !enabled {
+		return
+	}
+	for _, entry := range library.authorEntries {
+		entry.mutex.Lock()
+		if entry.author {
+			entry.async = true
+		}
+		entry.mutex.Unlock()
+	}
+}
+
+// SetLoadCallback installs a callback invoked after an asynchronous author
+// font finishes loading.
+func (library *Library) SetLoadCallback(callback func()) {
+	if library == nil {
+		return
+	}
+	library.mutex.Lock()
+	library.loadCallback = callback
+	library.mutex.Unlock()
+	for _, entry := range library.authorEntries {
+		entry.mutex.Lock()
+		entry.onLoad = callback
+		entry.mutex.Unlock()
+	}
+}
+
 // Clone returns a library sharing embedded/system entries but with fresh face
 // and glyph caches. Author @font-face entries are copied.
 func (library *Library) Clone() *Library {
@@ -250,14 +299,16 @@ func (library *Library) Clone() *Library {
 		return NewLibrary()
 	}
 	clone := &Library{
-		entries:         library.entries,
-		authorEntries:   append([]*fontEntry(nil), library.authorEntries...),
-		loadSystemFonts: library.loadSystemFonts,
-		system:          library.system,
-		resourceCache:   library.resourceCache,
-		faces:           make(map[faceKey]font.Face),
-		familyEntries:   make(map[string][]*fontEntry),
-		glyphCache:      NewGlyphCache(),
+		entries:          library.entries,
+		authorEntries:    append([]*fontEntry(nil), library.authorEntries...),
+		loadSystemFonts:  library.loadSystemFonts,
+		system:           library.system,
+		resourceCache:    library.resourceCache,
+		faces:            make(map[faceKey]font.Face),
+		familyEntries:    make(map[string][]*fontEntry),
+		glyphCache:       NewGlyphCache(),
+		asyncAuthorFonts: library.asyncAuthorFonts,
+		loadCallback:     library.loadCallback,
 	}
 	return clone
 }

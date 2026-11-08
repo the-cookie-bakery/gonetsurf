@@ -8,6 +8,8 @@ import (
 	"fmt"
 	htmlstd "html"
 	"image"
+	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"gonetsurf/parsers/css/cssom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
+	"gonetsurf/rendering/fonts"
 	"gonetsurf/rendering/geometry"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/rendering/software"
@@ -68,9 +71,10 @@ type Shell struct {
 	pointerX    int
 	pointerY    int
 
-	page     *pageState
-	Renderer interfaces.Renderer
-	dirty    bool
+	page        *pageState
+	Renderer    interfaces.Renderer
+	dirty       bool
+	dirtySignal chan struct{}
 
 	topBarCache    chromeCache
 	statusBarCache chromeCache
@@ -84,14 +88,14 @@ type chromeCache struct {
 	surface interfaces.Surface
 }
 
-func (cache *chromeCache) render(source string, width, height int, renderer interfaces.Renderer) (interfaces.Surface, error) {
+func (cache *chromeCache) render(source string, width, height int) (interfaces.Surface, error) {
 	if cache.surface != nil && cache.source == source && cache.width == width && cache.height == height {
 		return cache.surface, nil
 	}
 	cache.source = source
 	cache.width = width
 	cache.height = height
-	surface, err := renderChrome(source, width, height, renderer)
+	surface, err := renderChrome(source, width, height)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +105,7 @@ func (cache *chromeCache) render(source string, width, height int, renderer inte
 
 // New returns a shell with one blank tab and optional broker clients.
 func New(width, height int, initial *urls.URL, brokers ...BrokerClients) *Shell {
-	shell := &Shell{Browser: browsers.New(), Width: width, Height: height, dirty: true}
+	shell := &Shell{Browser: browsers.New(), Width: width, Height: height, dirty: true, dirtySignal: make(chan struct{}, 1)}
 	shell.pointerX = width / 2
 	if content := height - topBarHeight - statusBarHeight; content > 0 {
 		shell.pointerY = content / 2
@@ -134,6 +138,16 @@ func (shell *Shell) MarkDirty() {
 	shell.dirty = true
 }
 
+func (shell *Shell) notifyDirty() {
+	if shell.dirtySignal == nil {
+		return
+	}
+	select {
+	case shell.dirtySignal <- struct{}{}:
+	default:
+	}
+}
+
 // SetRenderer installs the rendering backend used for pages and chrome.
 func (shell *Shell) SetRenderer(renderer interfaces.Renderer) {
 	shell.Renderer = renderer
@@ -151,35 +165,49 @@ func (shell *Shell) Resize(width, height int) {
 
 // Render builds a frame with content, chrome, and the status bar.
 func (shell *Shell) Render() (interfaces.Surface, error) {
+	prepareStart := time.Now()
 	result := software.NewSurface(shell.Width, shell.Height)
 	result.Clear(rendering.NewColor(255, 255, 255))
+	debugf("frame: prepare %s", time.Since(prepareStart))
 	contentHeight := shell.contentHeight()
 	if shell.page != nil && contentHeight > 0 {
+		resizeStart := time.Now()
 		shell.page.page.Resize(shell.contentWidth(), contentHeight)
+		debugf("frame: resize %s", time.Since(resizeStart))
 		if tab := shell.Browser.ActiveTab(); tab != nil {
+			scrollStart := time.Now()
 			shell.page.page.ScrollTo(tab.ScrollX, tab.ScrollY)
+			debugf("frame: scroll %s", time.Since(scrollStart))
 		}
+		contentStart := time.Now()
 		content, err := shell.page.page.Render()
+		debugf("frame: content %s", time.Since(contentStart))
 		if err != nil {
 			return nil, err
 		}
 		if tab := shell.Browser.ActiveTab(); tab != nil {
 			tab.ScrollX, tab.ScrollY = shell.page.page.Scroll()
 		}
+		blitStart := time.Now()
 		result.Blit(0, topBarHeight, content, geometry.Copy)
+		debugf("frame: content blit %s", time.Since(blitStart))
 	}
-	topBar, err := shell.topBarCache.render(shell.chromeHTML(), shell.Width, topBarHeight, shell.Renderer)
+	topBarStart := time.Now()
+	topBar, err := shell.topBarCache.render(shell.chromeHTML(), shell.Width, topBarHeight)
+	debugf("frame: topbar %s", time.Since(topBarStart))
 	if err != nil {
 		return nil, err
 	}
 	result.Blit(0, 0, topBar, geometry.Copy)
-	statusBar, err := shell.statusBarCache.render(shell.statusHTML(), shell.Width, statusBarHeight, shell.Renderer)
+	statusStart := time.Now()
+	statusBar, err := shell.statusBarCache.render(shell.statusHTML(), shell.Width, statusBarHeight)
+	debugf("frame: statusbar %s", time.Since(statusStart))
 	if err != nil {
 		return nil, err
 	}
 	result.Blit(0, shell.Height-statusBarHeight, statusBar, geometry.Copy)
 	if shell.PrivacyOpen {
-		panel, err := shell.privacyCache.render(shell.privacyHTML(), privacyPanelWidth, privacyPanelHeight, shell.Renderer)
+		panel, err := shell.privacyCache.render(shell.privacyHTML(), privacyPanelWidth, privacyPanelHeight)
 		if err != nil {
 			return nil, err
 		}
@@ -292,7 +320,7 @@ html, body { margin:0; padding:0; font-family:sans-serif; font-size:11px; color:
 </body></html>`
 }
 
-func renderChrome(source string, width, height int, renderer interfaces.Renderer) (interfaces.Surface, error) {
+func renderChrome(source string, width, height int) (interfaces.Surface, error) {
 	if width <= 0 || height <= 0 {
 		return software.NewSurface(width, height), nil
 	}
@@ -301,7 +329,7 @@ func renderChrome(source string, width, height int, renderer interfaces.Renderer
 		return software.NewSurface(width, height), nil
 	}
 	engine := styleEngine(document)
-	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{Renderer: renderer})
+	return rendering.RenderDocumentWithOptions(document, engine, width, height, rendering.Options{})
 }
 
 func styleEngine(document *dom.Document) *styles.Engine {
@@ -321,6 +349,7 @@ func (shell *Shell) stylesheetEngine(document *dom.Document, base, topLevel *url
 			return shell.fetchResource(target.String(), topLevel)
 		},
 	}
+	loader = loader.Prefetch(document, base)
 	return loader.Engine(document, base)
 }
 
@@ -329,9 +358,7 @@ func (shell *Shell) Run(ctx context.Context, window windowing.Window) error {
 	input, _ := window.(windowing.InputWindow)
 	ticker := time.NewTicker(16 * time.Millisecond)
 	defer ticker.Stop()
-	if shell.dirty {
-		shell.present(window)
-	}
+	firstPresent := time.Now().Add(150 * time.Millisecond)
 	for {
 		var events <-chan windowing.Event
 		if input != nil {
@@ -340,8 +367,10 @@ func (shell *Shell) Run(ctx context.Context, window windowing.Window) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-shell.dirtySignal:
+			shell.dirty = true
 		case <-ticker.C:
-			if shell.dirty {
+			if shell.dirty && time.Now().After(firstPresent) {
 				shell.present(window)
 			}
 		case event, ok := <-events:
@@ -353,22 +382,48 @@ func (shell *Shell) Run(ctx context.Context, window windowing.Window) error {
 			}
 			if event.Type == windowing.EventResize {
 				shell.Resize(event.Width, event.Height)
+				firstPresent = time.Now().Add(32 * time.Millisecond)
+				continue
+			}
+			if event.Type == windowing.EventExpose {
+				shell.dirty = true
+				shell.present(window)
 				continue
 			}
 			shell.HandleEvent(ctx, input, event)
+			switch event.Type {
+			case windowing.EventKeyPress, windowing.EventMousePress, windowing.EventMouseRelease:
+				if shell.dirty {
+					shell.present(window)
+				}
+			}
 		}
 	}
 }
 
 func (shell *Shell) present(window windowing.Window) {
+	if width, height := window.Size(); width > 0 && height > 0 && (width != shell.Width || height != shell.Height) {
+		debugf("present: resizing %dx%d -> %dx%d", shell.Width, shell.Height, width, height)
+		shell.Resize(width, height)
+	}
+	renderStart := time.Now()
 	surface, err := shell.Render()
+	debugf("frame: render %s", time.Since(renderStart))
 	if err != nil {
+		debugf("present: render error: %v", err)
 		shell.Error = err.Error()
 		return
 	}
-	window.Surface().Blit(0, 0, surface, geometry.Copy)
-	if err := window.Present(image.Rect(0, 0, shell.Width, shell.Height)); err != nil {
-		shell.Error = err.Error()
+	damage := image.Rect(0, 0, shell.Width, shell.Height)
+	if presenter, ok := window.(windowing.SurfacePresenter); ok {
+		if err := presenter.PresentSurface(surface, damage); err != nil {
+			shell.Error = err.Error()
+		}
+	} else {
+		window.Surface().Blit(0, 0, surface, geometry.Copy)
+		if err := window.Present(damage); err != nil {
+			shell.Error = err.Error()
+		}
 	}
 	shell.dirty = false
 }
@@ -1017,9 +1072,11 @@ func (shell *Shell) navigateFrameState(ctx context.Context, state *pageState, ta
 		model:    state.model,
 		frames:   make(map[*dom.Node]*pageState),
 	}
-	options := shell.resourceOptions(pageURL, topLevel)
+	options, fontCache, rawLoader := shell.resourceOptions(pageURL, topLevel)
 	replacement.page = rendering.NewPage(document, replacement.engine, width, height, options)
 	replacement.page.Options.Subframes = subframeProvider{shell: shell, owner: replacement}
+	replacement.page.SetFontLoadedCallback(shell.notifyDirty)
+	shell.prefetchResources(document, replacement.engine, options, fontCache, rawLoader)
 	shell.loadFrames(replacement, topLevel, reload, 1, nil)
 	*state = *replacement
 	shell.dirty = true
@@ -1035,6 +1092,12 @@ func (shell *Shell) reload() {
 	shell.loadActiveTab(true)
 }
 
+func debugf(format string, arguments ...any) {
+	if os.Getenv("GONETSURF_DEBUG") != "" {
+		log.Printf(format, arguments...)
+	}
+}
+
 func (shell *Shell) loadActiveTab(reload bool) {
 	tab := shell.Browser.ActiveTab()
 	if tab == nil || tab.URL == nil {
@@ -1047,7 +1110,9 @@ func (shell *Shell) loadActiveTab(reload bool) {
 		return
 	}
 	shell.Status = "Loading " + tab.URL.String()
+	loadStart := time.Now()
 	source, pageURL, err := shell.fetchURL(tab.URL, reload, tab.URL)
+	debugf("load: document fetch %s (%d bytes)", time.Since(loadStart), len(source))
 	if err != nil {
 		shell.Error = err.Error()
 		shell.page = nil
@@ -1061,8 +1126,12 @@ func (shell *Shell) loadActiveTab(reload bool) {
 		shell.dirty = true
 		return
 	}
+	stylesStart := time.Now()
 	engine := shell.stylesheetEngine(document, pageURL, pageURL)
+	debugf("load: stylesheets %s", time.Since(stylesStart))
+	pageStart := time.Now()
 	state := shell.newPageState(document, engine, pageURL, pageURL, shell.contentWidth(), shell.contentHeight(), tab, 0)
+	debugf("load: page setup %s", time.Since(pageStart))
 	state.page.ScrollTo(tab.ScrollX, tab.ScrollY)
 	tab.SetScroll(state.page.Scroll())
 	shell.page = state
@@ -1286,16 +1355,23 @@ func (shell *Shell) LoadSession(ctx context.Context) error {
 	return nil
 }
 
-func (shell *Shell) resourceOptions(base, topLevel *urls.URL) rendering.Options {
+func (shell *Shell) resourceOptions(base, topLevel *urls.URL) (rendering.Options, *fonts.LoaderCache, fonts.Loader) {
 	loader := func(resource string) ([]byte, error) {
 		return shell.fetchResource(resource, topLevel)
 	}
-	return rendering.Options{
-		Renderer: shell.Renderer,
-		Images: rendering.URLImageProvider{
-			Base:  base,
-			Fetch: loader,
-		},
-		LoadFont: loader,
+	provider := rendering.URLImageProvider{
+		Base:  base,
+		Fetch: loader,
 	}
+	fontCache := fonts.NewLoaderCache()
+	return rendering.Options{
+		Renderer:   shell.Renderer,
+		AsyncFonts: true,
+		Images: rendering.CachedImageProvider{
+			Provider: provider,
+			Cache:    rendering.NewImageCache(),
+			Base:     base,
+		},
+		LoadFont: fontCache.Loader(loader),
+	}, fontCache, loader
 }

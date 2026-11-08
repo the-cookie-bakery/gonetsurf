@@ -1,6 +1,8 @@
 package rendering
 
 import (
+	"sync/atomic"
+
 	"gonetsurf/dom"
 	"gonetsurf/layouts"
 	"gonetsurf/parsers/css/mediaqueries"
@@ -22,10 +24,12 @@ type Page struct {
 	Width    int
 	Height   int
 
-	layout  *layouts.DocumentLayout
-	library *fonts.Library
-	scrollX float64
-	scrollY float64
+	layout           *layouts.DocumentLayout
+	library          *fonts.Library
+	scrollX          float64
+	scrollY          float64
+	fontLoadCallback func()
+	fontLayoutDirty  atomic.Bool
 }
 
 // NewPage returns a page for document and engine.
@@ -38,6 +42,7 @@ func NewPage(document *dom.Document, engine *styles.Engine, width, height int, o
 		Height:   maxInt(height, 0),
 	}
 	page.library = fontLibraryFor(document, engine, options)
+	page.library.SetAsyncAuthorFonts(options.AsyncFonts)
 	page.updateMediaEnvironment()
 	page.layout = layouts.NewDocumentLayout(document, engine, float64(page.Width), float64(page.Height))
 	page.layout.Shaper = fonts.NewShaper(page.library)
@@ -74,9 +79,31 @@ func (page *Page) Invalidate() {
 		page.layout.Invalidate()
 	}
 	page.library = fontLibraryFor(page.Document, page.Engine, page.Options)
+	page.library.SetAsyncAuthorFonts(page.Options.AsyncFonts)
+	if page.fontLoadCallback != nil {
+		page.library.SetLoadCallback(page.fontLoadCallback)
+	}
 	if page.layout != nil {
 		page.layout.Shaper = fonts.NewShaper(page.library)
 		page.layout.Metrics = page.library.Metrics
+	}
+}
+
+// SetFontLoadedCallback installs a callback invoked after an asynchronous
+// author font loads. The cached layout is invalidated so the next frame uses
+// the real face.
+func (page *Page) SetFontLoadedCallback(callback func()) {
+	if page == nil {
+		return
+	}
+	page.fontLoadCallback = func() {
+		page.fontLayoutDirty.Store(true)
+		if callback != nil {
+			callback()
+		}
+	}
+	if page.library != nil {
+		page.library.SetLoadCallback(page.fontLoadCallback)
 	}
 }
 
@@ -121,6 +148,9 @@ func (page *Page) MaxScroll() (float64, float64) {
 
 // ScrollTo sets the scroll offsets, clamped to the document's scroll range.
 func (page *Page) ScrollTo(left, top float64) {
+	if left == 0 && top == 0 && page.scrollX == 0 && page.scrollY == 0 {
+		return
+	}
 	root := page.root()
 	if root == nil {
 		return
@@ -251,18 +281,22 @@ func (page *Page) Render() (interfaces.Surface, error) {
 	if page == nil {
 		return software.NewSurface(0, 0), nil
 	}
+	if page.fontLayoutDirty.Swap(false) && page.layout != nil {
+		page.layout.Invalidate()
+	}
+	root := page.root()
 	renderer := page.Options.Renderer
 	if renderer == nil || renderer.Name() == "software" {
 		surface := software.NewSurface(page.Width, page.Height)
 		surface.Clear(NewColor(255, 255, 255))
-		if root := page.root(); root != nil {
+		if root != nil {
 			page.paint(root, surface)
 		}
 		return surface, nil
 	}
 	recorder := scene.New(page.Width, page.Height)
 	recorder.Clear(NewColor(255, 255, 255))
-	if root := page.root(); root != nil {
+	if root != nil {
 		page.paint(root, recorder)
 	}
 	return renderer.Render(recorder.Scene())

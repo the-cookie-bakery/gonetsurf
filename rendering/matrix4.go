@@ -124,3 +124,16 @@ func (matrix matrix4) isAffine2D() bool {
 func (matrix matrix4) affine2D() affine {
 	return affine{A: matrix[0], B: matrix[4], C: matrix[1], D: matrix[5], E: matrix[3], F: matrix[7]}
 }
+
+func (matrix matrix4) isIdentity() bool {
+	for index, value := range matrix {
+		expected := 0.0
+		if index == 0 || index == 5 || index == 10 || index == 15 {
+			expected = 1
+		}
+		if math.Abs(value-expected) > 1e-9 {
+			return false
+		}
+	}
+	return true
+}

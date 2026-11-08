@@ -79,7 +79,8 @@ func (library *Library) AddFontFaceRules(rules []*cssom.FontFaceRule, options Au
 			stretchMinimum, stretchMaximum, rule.FeatureSettings,
 			rule.VariationSettings, rule.FontDisplay)
 		display := strings.ToLower(strings.TrimSpace(rule.FontDisplay))
-		entry.async = display == "swap" || display == "optional"
+		entry.async = display == "swap" || display == "optional" || library.asyncAuthorFonts
+		entry.onLoad = library.loadCallback
 		if factor, ok := parsePercentageFactor(rule.SizeAdjust); ok {
 			entry.sizeAdjust = factor
 		}

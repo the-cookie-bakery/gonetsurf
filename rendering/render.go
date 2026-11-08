@@ -12,10 +12,11 @@ import (
 
 // Options configures a render pass.
 type Options struct {
-	Images    ImageProvider
-	LoadFont  fonts.Loader
-	Subframes SubframeProvider
-	Renderer  interfaces.Renderer
+	Images     ImageProvider
+	LoadFont   fonts.Loader
+	Subframes  SubframeProvider
+	Renderer   interfaces.Renderer
+	AsyncFonts bool
 }
 
 // SubframeProvider supplies rendered documents for nested browsing contexts.

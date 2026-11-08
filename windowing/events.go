@@ -24,6 +24,8 @@ const (
 	EventFocusIn
 	// EventFocusOut reports keyboard focus leaving the window.
 	EventFocusOut
+	// EventExpose requests that the window content be repainted.
+	EventExpose
 )
 
 // Modifiers records keyboard modifier state.

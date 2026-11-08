@@ -30,7 +30,7 @@ func (painter *Painter) paintStackingContextWithEffects(box *layouts.Box, surfac
 	if applyEffects {
 		matrix, hasTransform := parseBoxTransformMatrix(box)
 		opacity, hasOpacity := boxOpacity(box)
-		if hasTransform || hasOpacity {
+		if (hasTransform && !matrix.isIdentity()) || hasOpacity {
 			layer := surface.NewLayer()
 			painter.paintStackingContextWithEffects(box, layer, offsetX, offsetY, false)
 			surface.CompositeLayer(layer, toGeometryMatrix4(matrix), opacity)

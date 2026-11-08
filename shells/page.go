@@ -5,9 +5,12 @@ import (
 	"gonetsurf/dom"
 	"gonetsurf/parsers/html"
 	"gonetsurf/rendering"
+	"gonetsurf/rendering/fonts"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/styles"
 	"gonetsurf/urls"
+	"log"
+	"os"
 )
 
 const maximumFrameDepth = 4
@@ -32,9 +35,14 @@ func (shell *Shell) newPageState(document *dom.Document, engine *styles.Engine, 
 		tab:      tab,
 		frames:   make(map[*dom.Node]*pageState),
 	}
-	options := shell.resourceOptions(address, topLevel)
+	options, fontCache, rawLoader := shell.resourceOptions(address, topLevel)
 	state.page = rendering.NewPage(document, engine, width, height, options)
 	state.page.Options.Subframes = subframeProvider{shell: shell, owner: state}
+	state.page.SetFontLoadedCallback(shell.notifyDirty)
+	shell.prefetchResources(document, engine, options, fontCache, rawLoader)
+	if os.Getenv("GONETSURF_DEBUG") != "" {
+		log.Printf("load: page setup mutation=%d", document.MutationVersion())
+	}
 	if depth < maximumFrameDepth {
 		shell.loadFrames(state, topLevel, false, depth, tab)
 	}
@@ -87,9 +95,11 @@ func (shell *Shell) loadFrames(state *pageState, topLevel *urls.URL, reload bool
 			model:    model,
 			frames:   make(map[*dom.Node]*pageState),
 		}
-		options := shell.resourceOptions(pageURL, topLevel)
+		options, fontCache, rawLoader := shell.resourceOptions(pageURL, topLevel)
 		frame.page = rendering.NewPage(document, engine, 300, 150, options)
 		frame.page.Options.Subframes = subframeProvider{shell: shell, owner: frame}
+		frame.page.SetFontLoadedCallback(shell.notifyDirty)
+		shell.prefetchResources(document, engine, options, fontCache, rawLoader)
 		if depth+1 < maximumFrameDepth {
 			shell.loadFrames(frame, topLevel, reload, depth+1, nil)
 		}
@@ -135,4 +145,19 @@ func (shell *Shell) contentHeight() int {
 		height = 1
 	}
 	return height
+}
+
+func (shell *Shell) prefetchResources(document *dom.Document, engine *styles.Engine, options rendering.Options, fontCache *fonts.LoaderCache, rawLoader fonts.Loader) {
+	if prefetcher, ok := options.Images.(interface{ Prefetch([]string) }); ok {
+		resources := rendering.CollectDocumentImageResources(document)
+		if len(resources) > 0 {
+			go prefetcher.Prefetch(resources)
+		}
+	}
+	if fontCache != nil {
+		resources := rendering.CollectFontResources(engine)
+		if len(resources) > 0 {
+			go fontCache.Prefetch(resources, rawLoader)
+		}
+	}
 }

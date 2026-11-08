@@ -40,6 +40,14 @@ type URLImageProvider struct {
 func (provider URLImageProvider) LoadImage(resource string) (image.Image, error) {
 	address, ok := parseCSSURL(resource)
 	if !ok {
+		trimmed := strings.TrimSpace(resource)
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") || strings.HasPrefix(lower, "data:") {
+			address = trimmed
+			ok = true
+		}
+	}
+	if !ok {
 		return nil, fmt.Errorf("rendering: unsupported image source %q", resource)
 	}
 	var parsed *urls.URL

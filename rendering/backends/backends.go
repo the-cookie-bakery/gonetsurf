@@ -15,7 +15,12 @@ var Names = []string{"auto", "software", "vulkan"}
 // Select returns the backend for name. "auto" and "" select software.
 func Select(name string) (interfaces.Backend, error) {
 	switch name {
-	case "", "auto", "software":
+	case "", "auto":
+		if backend, err := vulkan.NewBackend(); err == nil {
+			return backend, nil
+		}
+		return software.NewBackend(), nil
+	case "software":
 		return software.NewBackend(), nil
 	case "vulkan":
 		return vulkan.NewBackend()

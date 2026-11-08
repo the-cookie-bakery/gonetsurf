@@ -6,6 +6,7 @@ import (
 	"context"
 	"image"
 
+	"gonetsurf/rendering/geometry"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/rendering/software"
 	"gonetsurf/windowing"
@@ -70,6 +71,15 @@ func (window *Window) Surface() interfaces.Surface {
 
 // Present accepts a damage rectangle. The surface is already the backing store.
 func (window *Window) Present(image.Rectangle) error {
+	return nil
+}
+
+// PresentSurface composites source into the in-memory backing store.
+func (window *Window) PresentSurface(source interfaces.Surface, damage image.Rectangle) error {
+	if source == nil || window.surface == nil {
+		return nil
+	}
+	window.surface.Blit(0, 0, source, geometry.Copy)
 	return nil
 }
 

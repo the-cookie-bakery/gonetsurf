@@ -19,7 +19,7 @@ const (
 	EvenOddFill = geometry.EvenOddFill
 
 	ButtCap   = geometry.ButtCap
-	RoundCap = geometry.RoundCap
+	RoundCap  = geometry.RoundCap
 	SquareCap = geometry.SquareCap
 
 	MiterJoin = geometry.MiterJoin

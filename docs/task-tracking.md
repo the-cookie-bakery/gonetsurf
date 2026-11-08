@@ -814,7 +814,35 @@ _None yet. Add a row here with the blocking dependency when a task is `Blocked`.
 - **P11-RENDER-004 — Verified:** `rendering/backends` and `--renderer` are wired
   through `cmd/netsurf`, `netsurfctl render/show/reftest`, pages, subframes,
   chrome, and reftests. The default remains software.
-- **P11-RENDER-005 — Implemented/Partial:** the Vulkan package, build tags,
-  shader sources, Makefile targets, and fallback renderer exist. The shader
-  pipelines and X11 swapchain presenter are not yet implemented; see
+- **P11-RENDER-005 — Implemented/Partial:** the Vulkan backend now renders
+  solid fills, paths/strokes (CPU coverage masks), gradients, images, glyphs,
+  masks, blend-pixel groups, and opacity/masked layers through an offscreen GPU
+  target with readback. Non-identity transformed layers fall back to software.
+  The X11 swapchain presenter and GPU path/gradient/glyph pipelines remain. See
   [`rendering-refactor.md`](../rendering-refactor.md).
+- **Loading pipeline:** decoded images, stylesheet bodies, and font bytes are
+  cached across frames; image/style/font subresources are prefetched
+  concurrently. The network broker multiplexes requests and dispatches them
+  concurrently instead of serializing on one mutex. Author fonts load
+  asynchronously with a fallback first layout. Identity transforms no longer
+  allocate layers. Layout/style computation remains CPU work.
+- **Vulkan quad fix:** the offscreen quad uses a four-vertex triangle strip;
+  the earlier six-vertex triangle-list setup was degenerate and left a missing
+  triangle at the bottom of image surfaces.
+- **Texture cache fix:** transient masks/overlays/layers now use content-hash
+  keys instead of pointer addresses; image textures are pinned. This fixes
+  borders appearing at stale scroll positions and popping up during input.
+- **Image prefetch fix:** raw absolute image URLs are accepted by the provider,
+  failed loads are retryable, and prefetch no longer treats every `href` as an
+  image. Project preview images render again.
+- **Async-font/layout race fix:** the font loader callback no longer mutates
+  `DocumentLayout` from a background goroutine. It sets an atomic flag that the
+  main render thread applies before `Reflow`, preventing a corrupt
+  `hasLayout=true, box=nil` cache and the resulting white frame.
+- **Address-bar refresh fix:** X11/headless windows implement
+  `windowing.SurfacePresenter`, compositing and presenting atomically against
+  resize-driven surface replacement. Input events also trigger an immediate
+  present. The shell now also re-syncs its viewport from `window.Size()` before
+  every frame, so a missed resize event cannot leave content rendered at a stale
+  size. X11 backing surfaces start white and `Expose` requests trigger a shell
+  repaint. This removes the black/blank-window-until-resize behavior.

@@ -25,3 +25,11 @@ type Window interface {
 	Size() (width, height int)
 	Scale() float64
 }
+
+// SurfacePresenter is implemented by windows that can atomically composite a
+// source surface into their backing store and present it. This avoids races
+// between a resize replacing the backing surface and the shell blitting into
+// the old one.
+type SurfacePresenter interface {
+	PresentSurface(source interfaces.Surface, damage image.Rectangle) error
+}

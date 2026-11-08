@@ -673,9 +673,11 @@ pixel-diff tolerance, and the reftest harness runs in CI.
   - Spec: N/A.
 
 **Status:** `P11-RENDER-001`–`004` are implemented and verified. `P11-RENDER-005`
-is scaffolded: the package, build tags, selection, shader sources, and Makefile
-targets exist, but the Vulkan command lowering and swapchain presenter remain.
-See [`rendering-refactor.md`](../rendering-refactor.md).
+is implemented for the offscreen GPU path: solid fills, CPU coverage masks,
+gradients, images, glyphs, masks, blend-pixel groups, and opacity/masked layers
+render through Vulkan and are read back into a surface. Non-identity transformed
+layers fall back to software; GPU path/gradient/glyph pipelines and the X11
+swapchain presenter remain. See [`rendering-refactor.md`](../rendering-refactor.md).
 
 ---
 

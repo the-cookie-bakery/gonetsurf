@@ -52,6 +52,7 @@ func (documentLayout *DocumentLayout) Reflow() *Box {
 	if documentLayout.hasLayout && documentLayout.version == documentLayout.Document.MutationVersion() {
 		return documentLayout.box
 	}
+
 	if documentLayout.hasLayout && documentLayout.Engine != nil &&
 		!documentLayout.Engine.HasGeneratedContent() &&
 		documentLayout.structureVersion == documentLayout.Document.StructuralVersion() {

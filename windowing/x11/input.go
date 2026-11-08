@@ -170,3 +170,8 @@ func keysymValues(keysym uint32) (string, string) {
 	}
 	return fmt.Sprintf("KeySym-%#x", keysym), ""
 }
+
+// Inject enqueues an event for tests and automation drivers.
+func (window *Window) Inject(event windowing.Event) {
+	window.sendEvent(event)
+}

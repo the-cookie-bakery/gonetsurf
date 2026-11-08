@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"gonetsurf/rendering/geometry"
 	"gonetsurf/rendering/interfaces"
 	"gonetsurf/rendering/software"
 	"gonetsurf/windowing"
@@ -177,7 +178,7 @@ func (display *Display) Open() (windowing.Window, error) {
 		width:            width,
 		height:           height,
 		title:            display.options.Title,
-		surface:          software.NewSurface(width, height),
+		surface:          newWindowSurface(width, height),
 		events:           make(chan windowing.Event, 64),
 		clipboardPending: make(map[uint32]chan string),
 	}
@@ -336,6 +337,12 @@ type Window struct {
 	clipboardPending map[uint32]chan string
 }
 
+func newWindowSurface(width, height int) *software.Surface {
+	surface := software.NewSurface(width, height)
+	surface.Clear(geometry.NewColor(255, 255, 255))
+	return surface
+}
+
 // Surface returns the window's rendering surface.
 func (window *Window) Surface() interfaces.Surface {
 	window.mutex.Lock()
@@ -347,12 +354,32 @@ func (window *Window) Surface() interfaces.Surface {
 func (window *Window) Present(damage image.Rectangle) error {
 	window.mutex.Lock()
 	surface := window.surface
-	width := window.width
-	height := window.height
 	window.mutex.Unlock()
-	if surface == nil || width <= 0 || height <= 0 {
+	return window.presentSurface(surface, damage)
+}
+
+// PresentSurface composites source into the window backing store and presents
+// it atomically with respect to window resizes.
+func (window *Window) PresentSurface(source interfaces.Surface, damage image.Rectangle) error {
+	if source == nil {
 		return nil
 	}
+	window.mutex.Lock()
+	if window.surface == nil {
+		window.surface = software.NewSurface(window.width, window.height)
+	}
+	window.surface.Blit(0, 0, source, geometry.Copy)
+	surface := window.surface
+	window.mutex.Unlock()
+	return window.presentSurface(surface, damage)
+}
+
+func (window *Window) presentSurface(surface *software.Surface, damage image.Rectangle) error {
+	if surface == nil || surface.Width <= 0 || surface.Height <= 0 {
+		return nil
+	}
+	width := surface.Width
+	height := surface.Height
 	converted := surface.Image()
 	startRow := 0
 	endRow := height
@@ -500,6 +527,7 @@ func (window *Window) handleEvent(packet []byte) (bool, error) {
 		if err := window.Present(image.Rect(0, 0, width, height)); err != nil {
 			return false, err
 		}
+		window.sendEvent(windowing.Event{Type: windowing.EventExpose})
 	case eventConfigureNotify:
 		width := int(binary.LittleEndian.Uint16(packet[20:22]))
 		height := int(binary.LittleEndian.Uint16(packet[22:24]))
@@ -512,7 +540,7 @@ func (window *Window) handleEvent(packet []byte) (bool, error) {
 		if resized {
 			window.width = width
 			window.height = height
-			window.surface = software.NewSurface(width, height)
+			window.surface = newWindowSurface(width, height)
 			window.display.resizeSHM(width, height)
 		}
 		window.mutex.Unlock()

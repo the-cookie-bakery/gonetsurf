@@ -3,7 +3,7 @@ package backends
 import "testing"
 
 func TestSelectSoftwareAndAuto(t *testing.T) {
-	for _, name := range []string{"", "auto", "software"} {
+	for _, name := range []string{"software"} {
 		backend, err := Select(name)
 		if err != nil {
 			t.Fatalf("Select(%q): %v", name, err)

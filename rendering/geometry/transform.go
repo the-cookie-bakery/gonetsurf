@@ -210,3 +210,17 @@ func (matrix Matrix4) IsAffine2D() bool {
 func (matrix Matrix4) Affine2D() Affine {
 	return Affine{A: matrix[0], B: matrix[4], C: matrix[1], D: matrix[5], E: matrix[3], F: matrix[7]}
 }
+
+// IsIdentity reports whether the transform is the identity matrix.
+func (matrix Matrix4) IsIdentity() bool {
+	for index, value := range matrix {
+		expected := 0.0
+		if index == 0 || index == 5 || index == 10 || index == 15 {
+			expected = 1
+		}
+		if math.Abs(value-expected) > 1e-9 {
+			return false
+		}
+	}
+	return true
+}
